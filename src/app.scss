@@ -1,0 +1,21 @@
+.avatar {
+  float: left;
+  margin-right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  .username {
+    margin: 0 5px;
+  }
+}
+
+.main-content {
+  .component {
+    height: calc(100vh - 64px);
+  }
+}
+
+body {
+  overflow: hidden;
+}

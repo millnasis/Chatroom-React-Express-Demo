@@ -1,0 +1,98 @@
+.talk-room {
+  display: flex;
+  flex-direction: row;
+  width: 98vw;
+  .list {
+    min-width: 200px;
+    width: 30%;
+    max-width: 400px;
+    height: 100%;
+    border-right: 2px solid lighten($color: #000000, $amount: 60%);
+    overflow-y: auto;
+    .friend {
+      transition: background-color 0.3s ease-in-out;
+      cursor: pointer;
+      &:hover {
+        background-color: darken($color: #fff, $amount: 5%);
+      }
+    }
+  }
+  .talk-window {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    .talk-area {
+      height: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      .show {
+        flex: 1;
+        width: 100%;
+        .show-card {
+          height: 70vh;
+          .loading-history {
+            width: 100%;
+            text-align: center;
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            &:hover {
+              background-color: darken($color: #fff, $amount: 5%);
+              text-decoration: underline;
+            }
+          }
+          .content-warp {
+            height: 90%;
+            overflow-y: scroll;
+          }
+        }
+      }
+      .input {
+        height: 30%;
+        min-height: 100px;
+        max-height: 200px;
+        border: 1px solid #ccc;
+        z-index: 1000;
+        margin-bottom: 4vh;
+      }
+    }
+    .info-area {
+      width: 30%;
+      max-width: 300px;
+      min-width: 100px;
+      .info-area-card {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        height: 100%;
+        &.single {
+          display: flex;
+          padding-top: 5vh;
+          flex-direction: column;
+          align-items: center;
+          .user-info {
+            flex: 1;
+            width: 100%;
+            padding-right: 1vw;
+            label{
+              font-weight: 800;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.w-e-select-list,
+.w-e-drop-panel {
+  height: 20vh;
+  .w-e-panel-content-emotion,
+  .w-e-panel-content-color {
+    height: 18vh;
+    overflow-y: scroll;
+  }
+}

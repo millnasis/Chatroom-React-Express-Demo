@@ -1,0 +1,21 @@
+# 依赖目录
+node_modules/
+
+# 后端服务器的静态资源
+
+server/public/css/
+server/public/js/
+server/public/img/
+server/public/media/
+server/public/video/
+
+# 构造文件
+dist
+
+# 公共资源
+public
+
+# 旧版源码
+
+vuesrc
+package(vue).json

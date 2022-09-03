@@ -1,0 +1,13 @@
+.create-room {
+  padding: 0 20vw;
+  .create-room-body {
+    border: 1px solid darken($color: #fff, $amount: 10%);
+    background-color: #fff;
+    height: 100%;
+    overflow-y: auto;
+    .avatar{
+        width: 200px;
+        height: 200px;
+    }
+  }
+}

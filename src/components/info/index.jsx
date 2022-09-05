@@ -1,16 +1,28 @@
+import ImgCrop from "antd-img-crop";
 import React from "react";
 import "./index.scss";
 import {
-  Avatar,
   Form,
   Input,
   Button,
   Card,
   Divider,
   Cascader,
+  Upload,
+  Image,
   DatePicker,
 } from "antd";
 import { EditOutlined } from "@ant-design/icons";
+
+import { actions } from "../../redux/info.js";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { withUseParamsHooksHOC } from "../../tools/withUseParamsHooksHOC.jsx";
+import { LoadingOutlined, PlusOutlined, SkinOutlined } from "@ant-design/icons";
+const { get_info } = actions;
+import moment from "moment";
+
+import axios from "axios";
 
 const options = [
   {
@@ -160,7 +172,29 @@ const options = [
 const pro = [];
 
 const FormItem = (props) => {
+  const { sendToUpdate, username, name, content } = props;
+  // console.log(name, username, content);
+  const sendMethod = async () => {
+    try {
+      const ret = await sendToUpdate(username, name, value);
+      if (!ret) {
+        return;
+      }
+      setEdit(false);
+      setRecord(ret);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const [edit, setEdit] = React.useState(false);
+  const [value, setValue] = React.useState(content);
+  const [record, setRecord] = React.useState(content);
+  React.useEffect(() => {
+    if (!record) {
+      setValue(content);
+      setRecord(content);
+    }
+  });
   switch (props.type) {
     case "city":
       return (
@@ -170,7 +204,7 @@ const FormItem = (props) => {
             <div className="content">
               {!edit ? (
                 <>
-                  {props.content}
+                  {record}
                   <span className="edit-control" onClick={() => setEdit(true)}>
                     <EditOutlined></EditOutlined>&nbsp;编辑
                   </span>
@@ -205,16 +239,21 @@ const FormItem = (props) => {
             <div className="content">
               {!edit ? (
                 <>
-                  {props.content}
+                  {record}
                   <span className="edit-control" onClick={() => setEdit(true)}>
                     <EditOutlined></EditOutlined>&nbsp;编辑
                   </span>
                 </>
               ) : (
                 <>
-                  <Input type={"date"}></Input>
+                  <DatePicker
+                    defaultValue={moment(record, "YYYY年MM月DD日")}
+                    onChange={(value) => {
+                      setValue(value ? value.format("YYYY年MM月DD日") : "");
+                    }}
+                  ></DatePicker>
                   <div className="btn-control">
-                    <Button type="primary" onClick={() => setEdit(false)}>
+                    <Button type="primary" onClick={sendMethod}>
                       保存
                     </Button>
                     <Button type="default" onClick={() => setEdit(false)}>
@@ -235,7 +274,7 @@ const FormItem = (props) => {
             <div className="content">
               {!edit ? (
                 <>
-                  {props.content}
+                  {record}
                   <span className="edit-control" onClick={() => setEdit(true)}>
                     <EditOutlined></EditOutlined>&nbsp;编辑
                   </span>
@@ -265,7 +304,7 @@ const FormItem = (props) => {
             <div className="content">
               {!edit ? (
                 <>
-                  {props.content}
+                  {record}
                   <span className="edit-control" onClick={() => setEdit(true)}>
                     <EditOutlined></EditOutlined>&nbsp;编辑
                   </span>
@@ -311,7 +350,7 @@ const FormItem = (props) => {
             <div className="content">
               {!edit ? (
                 <>
-                  {props.content}
+                  {record}
                   <span className="edit-control" onClick={() => setEdit(true)}>
                     <EditOutlined></EditOutlined>&nbsp;编辑
                   </span>
@@ -342,7 +381,7 @@ const FormItem = (props) => {
             <div className="content">
               {!edit ? (
                 <>
-                  {props.content}
+                  {record}
                   <span className="edit-control" onClick={() => setEdit(true)}>
                     <EditOutlined></EditOutlined>&nbsp;编辑
                   </span>
@@ -373,7 +412,7 @@ const FormItem = (props) => {
             <div className="content">
               {!edit ? (
                 <>
-                  {props.content}
+                  {record}
                   <span className="edit-control" onClick={() => setEdit(true)}>
                     <EditOutlined></EditOutlined>&nbsp;编辑
                   </span>
@@ -405,94 +444,287 @@ const FormItem = (props) => {
 class Info extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      avatar: {
+        loading: false,
+        url: "",
+        change: false,
+      },
+      cover: {
+        loading: false,
+        url: "",
+        change: false,
+      },
+    };
+  }
+
+  sendToUpdate = async (username, name, data) => {
+    try {
+      const response = await axios.put(`/api/user/${username}`, {
+        name,
+        data,
+      });
+      if (response && response.status === 200) {
+        return response.data;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  };
+
+  componentDidMount() {
+    this.props.get_info(this.props.params.username);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.targetInfo !== this.props.targetInfo) {
+      this.setState({
+        avatar: {
+          loading: false,
+          url: this.props.targetInfo.head_picture,
+          change: false,
+        },
+        cover: {
+          loading: false,
+          url: this.props.targetInfo.cover,
+        },
+      });
+    }
   }
 
   render() {
+    let {
+      age,
+      foundtime,
+      head_picture,
+      sex,
+      words,
+      area,
+      birthday,
+      username,
+      email,
+    } = this.props.targetInfo;
+    if (!area) {
+      area = [];
+    }
     return (
       <div className="component user-info">
         <div className="user-info-body">
           <div className="cover-warp">
-            <div className="cover"></div>
+            <div className="change-cover">
+              <ImgCrop rotate aspect={5}>
+                <Upload
+                  action="/api/uploadIMG"
+                  showUploadList={false}
+                  name="picture"
+                  onChange={async (info) => {
+                    if (info.file.status === "uploading") {
+                      this.setState({
+                        cover: { ...this.state.cover, loading: true },
+                      });
+                      return;
+                    }
+
+                    if (info.file.status === "done") {
+                      const ret = await this.sendToUpdate(
+                        username,
+                        "cover",
+                        info.file.response
+                      );
+                      if (!ret) {
+                        return;
+                      }
+                      this.setState({
+                        cover: {
+                          loading: false,
+                          url: info.file.response,
+                        },
+                      });
+                    }
+                  }}
+                >
+                  <span className="change-btn">
+                    <SkinOutlined></SkinOutlined>更换封面
+                  </span>
+                </Upload>
+              </ImgCrop>
+            </div>
+            <img className="cover" src={this.state.cover.url}></img>
           </div>
           <div className="info">
             <div className="avatar-area">
-              <Avatar className="avatar" shape="square"></Avatar>
+              <div className="avatar-body">
+                <ImgCrop rotate>
+                  <Upload
+                    action="/api/uploadIMG"
+                    listType="picture-card"
+                    showUploadList={false}
+                    name="picture"
+                    onChange={(info) => {
+                      if (info.file.status === "uploading") {
+                        this.setState({
+                          avatar: { ...this.state.avatar, loading: true },
+                        });
+                        return;
+                      }
+
+                      if (info.file.status === "done") {
+                        // Get this url from response in real world.
+                        this.setState({
+                          avatar: {
+                            loading: false,
+                            url: info.file.response,
+                            change: true,
+                          },
+                        });
+                      }
+                    }}
+                  >
+                    {this.state.avatar.url ? (
+                      <img
+                        src={this.state.avatar.url}
+                        alt="avatar"
+                        style={{
+                          width: "100%",
+                        }}
+                      />
+                    ) : (
+                      <div>
+                        {this.state.avatar.loading ? (
+                          <LoadingOutlined />
+                        ) : (
+                          <PlusOutlined />
+                        )}
+                        <div
+                          style={{
+                            marginTop: 8,
+                          }}
+                        >
+                          Upload
+                        </div>
+                      </div>
+                    )}
+                  </Upload>
+                </ImgCrop>
+                <p>
+                  {this.state.avatar.change && (
+                    <Button
+                      type="primary"
+                      onClick={async () => {
+                        try {
+                          const ret = await this.sendToUpdate(
+                            username,
+                            "head_picture",
+                            this.state.avatar.url
+                          );
+                          if (!ret) {
+                            return;
+                          }
+                          this.setState({
+                            avatar: { ...this.state.avatar, change: false },
+                          });
+                        } catch (error) {
+                          console.error(error);
+                        }
+                      }}
+                    >
+                      保存
+                    </Button>
+                  )}
+                </p>
+              </div>
             </div>
             <div className="info-body">
               <Card>
                 <Form className="form">
-                  <FormItem
-                    type="input"
-                    label={
-                      <label>
-                        <strong>用户名</strong>
-                      </label>
-                    }
-                    content={<>MillNasis</>}
-                  ></FormItem>
+                  <Form.Item className="form-item">
+                    <div className="form-item-inner">
+                      <div className="label">
+                        <label>
+                          <strong>用户名</strong>
+                        </label>
+                      </div>
+                      <div className="content">{username}</div>
+                    </div>
+                  </Form.Item>
                   <Divider></Divider>
                   <FormItem
+                    sendToUpdate={this.sendToUpdate}
+                    username={username}
+                    name="sex"
                     type="radio"
                     label={
                       <label>
                         <strong>性别</strong>
                       </label>
                     }
-                    content={<>男</>}
+                    content={sex}
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    sendToUpdate={this.sendToUpdate}
+                    username={username}
+                    name="birthday"
                     type="date"
                     label={
                       <label>
                         <strong>生日</strong>
                       </label>
                     }
-                    content={<>2022年9月1日</>}
+                    content={birthday}
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    sendToUpdate={this.sendToUpdate}
+                    username={username}
+                    name="age"
                     type="number"
                     label={
                       <label>
                         <strong>年龄</strong>
                       </label>
                     }
-                    content={<>19</>}
+                    content={age}
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    sendToUpdate={this.sendToUpdate}
+                    username={username}
+                    name="area"
                     type="city"
                     label={
                       <label>
                         <strong>所在地区</strong>
                       </label>
                     }
-                    content={<>广西 南宁</>}
+                    content={area.join("")}
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    sendToUpdate={this.sendToUpdate}
+                    username={username}
+                    name="email"
                     type="email"
                     label={
                       <label>
                         <strong>邮箱</strong>
                       </label>
                     }
-                    content={<>1985551393@qq.com</>}
+                    content={email}
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    sendToUpdate={this.sendToUpdate}
+                    username={username}
+                    name="words"
                     type="textarea"
                     label={
                       <label>
                         <strong>个性签名</strong>
                       </label>
                     }
-                    content={
-                      <>
-                        这是一个很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很很长很长很长很长很长很长很长很长很长的个性签名
-                      </>
-                    }
+                    content={words}
                   ></FormItem>
                   <Divider></Divider>
                 </Form>
@@ -505,4 +737,19 @@ class Info extends React.Component {
   }
 }
 
-export default Info;
+function mapStateToPorps(state) {
+  return {
+    ...state.info,
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    get_info: bindActionCreators(get_info, dispatch),
+  };
+}
+
+export default connect(
+  mapStateToPorps,
+  mapDispatchToProps
+)(withUseParamsHooksHOC(Info));

@@ -9,9 +9,11 @@ const db = require("../mod/index");
 module.exports = (io) => {
   socketRouter(io);
 
-  router.use("/api", check.session, apiRouter);
+  router.use("/api", apiRouter);
 
   router.get("/", userCtrl.mainIndex);
+
+  router.get("/login", userCtrl.loginPage);
 
   return router;
 };

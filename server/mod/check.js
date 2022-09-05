@@ -54,10 +54,10 @@ exports.loginCheck = async (req, res, next) => {
   let ret = await permit.find({ username: req.body.username }).toArray();
   console.log(ret);
   if (ret.length === 0) {
-    res.status(404).send("用户不存在");
+    res.status(404).send("username");
     return;
   } else if (ret[0].password != req.body.password) {
-    res.status(403).send("密码错误");
+    res.status(403).send("password");
     return;
   }
   next();

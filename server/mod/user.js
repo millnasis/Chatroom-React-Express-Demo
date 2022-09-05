@@ -368,60 +368,96 @@ exports.findGroupById = async (req, res, next) => {
 };
 
 exports.updateUserInfo = async (req, res, next) => {
-  let users = (await db).collection("users");
-  if (req.body.deleteGroup) {
-    let find = {
-      username: req.params.username,
-    };
-    let ret = await users.updateOne(find, {
-      $pull: { group: { group_id: req.body.group.room_id } },
-    });
-    console.log(ret);
-    let userInfo = await users
-      .find({ username: req.params.username })
-      .toArray();
-    req.session.user = userInfo[0];
-    res.send("OK");
-  } else if (req.body.group_name) {
-    let find = {
-      username: req.params.username,
-      "group.group_id": req.body.room_id,
-    };
-    let ret = await users.updateOne(find, {
-      $set: { "group.$.sort": req.body.group_name },
-    });
-    // 这里"group.$.sort"中的$表示匹配到的数组中的第一个元素
-    console.log(ret);
-    let userInfo = await users
-      .find({ username: req.params.username })
-      .toArray();
-    req.session.user = userInfo[0];
-    res.send("OK");
-  } else {
-    let find = {
-      username: req.params.username,
-    };
-    let ret = await users.updateOne(find, {
-      $set: {
-        username: req.body.username,
-        words: req.body.words,
-        head_picture: req.body.head_picture,
-        age: req.body.age,
-        sex: req.body.sex,
-      },
-    });
-    console.log(ret);
-    let userInfo = await users
-      .find({ username: req.params.username })
-      .toArray();
-    req.session.user = userInfo[0];
-    res.send("OK");
+  try {
+    let users = (await db).collection("users");
+    const { username } = req.params;
+    const { name, data } = req.body;
+    const ret = await users.updateOne(
+      { username },
+      {
+        $set: {
+          [name]: data,
+        },
+      }
+    );
+    if (!ret) {
+      res.status(500).send("服务端出错");
+      return;
+    }
+    res.send(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("服务端出错");
   }
+  // if (req.body.deleteGroup) {
+  //   let find = {
+  //     username: req.params.username,
+  //   };
+  //   let ret = await users.updateOne(find, {
+  //     $pull: { group: { group_id: req.body.group.room_id } },
+  //   });
+  //   console.log(ret);
+  //   let userInfo = await users
+  //     .find({ username: req.params.username })
+  //     .toArray();
+  //   req.session.user = userInfo[0];
+  //   res.send("OK");
+  // } else if (req.body.group_name) {
+  //   let find = {
+  //     username: req.params.username,
+  //     "group.group_id": req.body.room_id,
+  //   };
+  //   let ret = await users.updateOne(find, {
+  //     $set: { "group.$.sort": req.body.group_name },
+  //   });
+  //   // 这里"group.$.sort"中的$表示匹配到的数组中的第一个元素
+  //   console.log(ret);
+  //   let userInfo = await users
+  //     .find({ username: req.params.username })
+  //     .toArray();
+  //   req.session.user = userInfo[0];
+  //   res.send("OK");
+  // } else {
+  //   let find = {
+  //     username: req.params.username,
+  //   };
+  //   let ret = await users.updateOne(find, {
+  //     $set: {
+  //       username: req.body.username,
+  //       words: req.body.words,
+  //       head_picture: req.body.head_picture,
+  //       age: req.body.age,
+  //       sex: req.body.sex,
+  //     },
+  //   });
+  //   console.log(ret);
+  //   let userInfo = await users
+  //     .find({ username: req.params.username })
+  //     .toArray();
+  //   req.session.user = userInfo[0];
+  //   res.send("OK");
+  // }
 };
 
 exports.findMyUser = async (req, res, next) => {
-  console.log(req.session.user);
-  res.send(req.session.user);
+  if (!req.session.user) {
+    res.status(403).send("未登录");
+    return;
+  }
+  const user = (await db).collection("users");
+  try {
+    let userInfo = await user
+      .find({ username: req.session.user.username })
+      .toArray();
+    if (userInfo.length === 0) {
+      throw Error;
+    }
+    req.session.user = userInfo[0];
+    res.send(req.session.user);
+  } catch (error) {
+    res.status(404).send("userexist");
+    // 返回错误的状态码会让客户端的ajax报错
+  }
 };
 
 exports.findUserByName = async (req, res, next) => {
@@ -440,21 +476,20 @@ exports.findUserByName = async (req, res, next) => {
 };
 
 exports.mainIndex = async (req, res, next) => {
-  // if (!req.session.user) {
-  //   res.redirect("/login");
-  //   return;
-  // }
+  if (!req.session.user) {
+    res.redirect("/login");
+    return;
+  }
   let ret = await render("index.html");
   res.send(ret);
 };
 
 exports.loginPage = async (req, res, next) => {
-  console.log(req.session);
   if (req.session.user) {
     res.redirect("/");
     return;
   }
-  let ret = await render("LoginPage.html");
+  let ret = await render("index.html");
   res.send(ret);
 };
 
@@ -466,9 +501,9 @@ exports.loginHandle = async (req, res, next) => {
       throw Error;
     }
     req.session.user = userInfo[0];
-    res.send("OK");
+    res.send(userInfo[0]);
   } catch (error) {
-    res.status(404).send("用户不存在");
+    res.status(404).send("userexist");
     // 返回错误的状态码会让客户端的ajax报错
   }
 };
@@ -545,6 +580,6 @@ exports.getRecording = async (req, res, next) => {
   {$limit:1}]).pretty()*/
 
 exports.calMark = async (req, res, next) => {
-  let ret = await render("calMark.html")
+  let ret = await render("calMark.html");
   res.send(ret);
 };

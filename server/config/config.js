@@ -7,7 +7,7 @@ let storage = multer.diskStorage({
   filename: function(req, file, callback) {
     let filename =
       req.session.user.username + req.session.user._id + file.originalname;
-    req.fileurl = "/img/upload/" + filename;
+    req.fileurl = "/public/img/upload/" + filename;
     callback(null, filename);
     //filename中的回调函数的第二个参数是文件最终的名字，file.originalname是原文件名，file自带的属性
   },

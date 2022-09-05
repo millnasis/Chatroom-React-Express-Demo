@@ -2,13 +2,20 @@ import React from "react";
 import { Avatar, Layout, Menu } from "antd";
 import { Route, Routes, Link } from "react-router-dom";
 import "./app.scss";
-import { withUseParamsHooksHOC } from "./tools/withUseNavigateHOC.jsx";
 import ChatRoom from "./components/chatroom/index.jsx";
-import axios from "axios";
 import Message from "./components/message/index.jsx";
 import Search from "./components/search/index.jsx";
 import Info from "./components/info/index.jsx";
 import CreateRoom from "./components/createRoom/index.jsx";
+import { withUseNavigateHooksHOC } from "./tools/withUseNavigateHooksHOC.jsx";
+import { withUseLocationHooksHOC } from "./tools/withUseLocationHooksHOC.jsx";
+import LoginPage from "./components/loginPage/index.jsx";
+import { connect } from "react-redux";
+import { actions } from "./redux/root";
+import { bindActionCreators } from "redux";
+import Logout from "./components/logout/index.jsx";
+
+const { get_user_info } = actions;
 
 const { Content, Footer, Header } = Layout;
 
@@ -35,7 +42,14 @@ const menuItems = [
   },
   {
     label: "退出登陆",
-    key: "quit",
+    key: "logout",
+  },
+];
+
+const loginItem = [
+  {
+    label: "请在登录后使用其他功能 ^_^",
+    key: "login",
   },
 ];
 
@@ -44,22 +58,48 @@ class App extends React.Component {
     super(props);
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.props.get_user_info();
+  }
+
+  componentDidUpdate(prevProps) {
+    console.log(this.props.login, this.props.userInfo);
+    if (
+      prevProps.location.pathname !== this.props.location.pathname ||
+      this.props.login !== prevProps.login
+    ) {
+      this.props.get_user_info();
+
+      if (this.props.location.pathname !== "/login" && !this.props.login) {
+        this.props.navigate("/login");
+      } else if (
+        this.props.location.pathname === "/login" &&
+        this.props.login
+      ) {
+        this.props.navigate("/");
+      }
+    }
+  }
 
   render() {
+    const { head_picture, username } = this.props.userInfo;
     return (
       <Layout>
         <Header>
-          <div className="avatar">
-            <Avatar src="" shape="square" size={"large"}></Avatar>
-            <span className="username">用户名</span>
-          </div>
+          {this.props.login && (
+            <div
+              className="avatar"
+              onClick={() => this.props.navigate("/info/" + username)}
+            >
+              <Avatar src={head_picture} shape="square" size={"large"}></Avatar>
+              <span className="username">{username}</span>
+            </div>
+          )}
           <Menu
             mode="horizontal"
             theme="dark"
-            items={menuItems}
+            items={this.props.login ? menuItems : loginItem}
             onClick={(info) => {
-              console.log(info);
               this.props.navigate(`/${info.key}`);
             }}
           ></Menu>
@@ -69,7 +109,9 @@ class App extends React.Component {
             <Route path="/main" element={<ChatRoom></ChatRoom>}></Route>
             <Route path="/msg" element={<Message></Message>}></Route>
             <Route path="/search" element={<Search></Search>}></Route>
-            <Route path="/info" element={<Info></Info>}></Route>
+            <Route path="/info/:username" element={<Info></Info>}></Route>
+            <Route path="/login" element={<LoginPage></LoginPage>}></Route>
+            <Route path="/logout" element={<Logout></Logout>}></Route>
             <Route
               path="/create-room"
               element={<CreateRoom></CreateRoom>}
@@ -82,4 +124,19 @@ class App extends React.Component {
   }
 }
 
-export default withUseParamsHooksHOC(App);
+function mapStateToProps(state) {
+  return {
+    ...state.global,
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    get_user_info: bindActionCreators(get_user_info, dispatch),
+  };
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withUseNavigateHooksHOC(withUseLocationHooksHOC(App)));

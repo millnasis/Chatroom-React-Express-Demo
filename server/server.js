@@ -15,6 +15,10 @@ server.use(
   history({
     rewrites: [
       {
+        from: /\/login/,
+        to: "/login",
+      },
+      {
         from: /^(?!(\/api)|(\/public)).*/,
         to: "/",
       },
@@ -56,15 +60,13 @@ server.use(
   })
 );
 
-server.use("/img", express.static("./public/img"));
-server.use("/js", express.static("./public/js"));
-server.use("/css", express.static("./public/css"));
+server.use("/public", express.static("./public/"));
 
 const router = require("./routers/index")(io);
 server.use(router);
 
 server.use((req, res) => {
-  res.send("404 NOT FOUND");
+  res.status(404).send("404 NOT FOUND");
 });
 
 http.listen(8000, () => {

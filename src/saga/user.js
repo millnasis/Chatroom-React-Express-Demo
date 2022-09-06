@@ -3,6 +3,7 @@ import { put, take, call } from "redux-saga/effects";
 // 异步封装
 import axios from "axios";
 import { actionsType, actions } from "../redux/root.js";
+import { actions as chatroomActions } from "../redux/chatroom.js";
 
 export function* getUserInfo() {
   while (true) {
@@ -11,6 +12,9 @@ export function* getUserInfo() {
       const response = yield call(axios.get, "/api/myuser");
       if (response && response.status === 200) {
         yield put(actions.response_user_info(response.data));
+        if (action.group) {
+          yield put(chatroomActions.get_group());
+        }
       }
     } catch (error) {
       yield put(actions.reset_user_info());

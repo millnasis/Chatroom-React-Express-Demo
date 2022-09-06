@@ -34,6 +34,8 @@ router.put("/deleteFriend", check.session, userCtrl.deleteFriend);
 
 router.get("/group/:groupid", userCtrl.findGroupById);
 
+router.get("/group", check.session, userCtrl.findGroupByUsername);
+
 router.put("/group/:groupid", check.session, userCtrl.updateGroupInfo);
 
 router.delete(

@@ -2,6 +2,7 @@ import { combineReducers } from "redux";
 // 导入其他reducer
 import { reducer as loginReducer } from "./login.js";
 import { reducer as infoReducer } from "./info.js";
+import { reducer as chatroomReducer } from "./chatroom.js";
 
 // 初始状态
 const initialState = {
@@ -22,9 +23,10 @@ export const actionsType = {
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
 export const actions = {
-  get_user_info() {
+  get_user_info(group = false) {
     return {
       type: actionsType.SEND_TO_GET_USER_INFO,
+      group,
     };
   },
   response_user_info(data) {
@@ -110,4 +112,5 @@ export default combineReducers({
   global: reducer,
   login: loginReducer,
   info: infoReducer,
+  chatroom: chatroomReducer,
 });

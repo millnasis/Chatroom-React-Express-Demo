@@ -59,7 +59,7 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    this.props.get_user_info();
+    this.props.get_user_info(this.props.chatroom.initial);
   }
 
   componentDidUpdate(prevProps) {
@@ -68,8 +68,7 @@ class App extends React.Component {
       prevProps.location.pathname !== this.props.location.pathname ||
       this.props.login !== prevProps.login
     ) {
-      this.props.get_user_info();
-
+      this.props.get_user_info(this.props.chatroom.initial);
       if (this.props.location.pathname !== "/login" && !this.props.login) {
         this.props.navigate("/login");
       } else if (
@@ -127,6 +126,7 @@ class App extends React.Component {
 function mapStateToProps(state) {
   return {
     ...state.global,
+    chatroom: state.chatroom,
   };
 }
 

@@ -11,6 +11,7 @@ import {
   Upload,
   Image,
   DatePicker,
+  Radio,
 } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 
@@ -182,6 +183,7 @@ const FormItem = (props) => {
       }
       setEdit(false);
       setRecord(ret);
+      setValue(ret);
     } catch (error) {
       console.error(error);
     }
@@ -213,12 +215,14 @@ const FormItem = (props) => {
                 <>
                   <Cascader
                     options={options}
-                    defaultValue={["中国", "广西"]}
-                    onChange={() => null}
+                    value={value}
+                    onChange={(value, selectOtion) => {
+                      setValue(value);
+                    }}
                     placeholder="请选择"
                   />
                   <div className="btn-control">
-                    <Button type="primary" onClick={() => setEdit(false)}>
+                    <Button type="primary" onClick={sendMethod}>
                       保存
                     </Button>
                     <Button type="default" onClick={() => setEdit(false)}>
@@ -281,9 +285,13 @@ const FormItem = (props) => {
                 </>
               ) : (
                 <>
-                  <Input type={"number"}></Input>
+                  <Input
+                    type={"number"}
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                  ></Input>
                   <div className="btn-control">
-                    <Button type="primary" onClick={() => setEdit(false)}>
+                    <Button type="primary" onClick={sendMethod}>
                       保存
                     </Button>
                     <Button type="default" onClick={() => setEdit(false)}>
@@ -311,25 +319,15 @@ const FormItem = (props) => {
                 </>
               ) : (
                 <>
-                  <p>
-                    男
-                    <Input
-                      type={"radio"}
-                      name="sex"
-                      className="radio"
-                      size="large"
-                      checked
-                    ></Input>
-                    女
-                    <Input
-                      type={"radio"}
-                      name="sex"
-                      className="radio"
-                      size="large"
-                    ></Input>
-                  </p>
+                  <Radio.Group
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                  >
+                    <Radio value={"男"}>男</Radio>
+                    <Radio value={"女"}>女</Radio>
+                  </Radio.Group>
                   <div className="btn-control">
-                    <Button type="primary" onClick={() => setEdit(false)}>
+                    <Button type="primary" onClick={sendMethod}>
                       保存
                     </Button>
                     <Button type="default" onClick={() => setEdit(false)}>
@@ -357,10 +355,14 @@ const FormItem = (props) => {
                 </>
               ) : (
                 <>
-                  <Input type={"text"}></Input>
+                  <Input
+                    type={"text"}
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                  ></Input>
                   <br />
                   <div className="btn-control">
-                    <Button type="primary" onClick={() => setEdit(false)}>
+                    <Button type="primary" onClick={sendMethod}>
                       保存
                     </Button>
                     <Button type="default" onClick={() => setEdit(false)}>
@@ -388,10 +390,14 @@ const FormItem = (props) => {
                 </>
               ) : (
                 <>
-                  <Input type={"email"}></Input>
+                  <Input
+                    type={"email"}
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                  ></Input>
                   <br />
                   <div className="btn-control">
-                    <Button type="primary" onClick={() => setEdit(false)}>
+                    <Button type="primary" onClick={sendMethod}>
                       保存
                     </Button>
                     <Button type="default" onClick={() => setEdit(false)}>
@@ -419,10 +425,13 @@ const FormItem = (props) => {
                 </>
               ) : (
                 <>
-                  <Input.TextArea></Input.TextArea>
+                  <Input.TextArea
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                  ></Input.TextArea>
                   <br />
                   <div className="btn-control">
-                    <Button type="primary" onClick={() => setEdit(false)}>
+                    <Button type="primary" onClick={sendMethod}>
                       保存
                     </Button>
                     <Button type="default" onClick={() => setEdit(false)}>

@@ -367,6 +367,138 @@ exports.findGroupById = async (req, res, next) => {
   res.send(ret[0]);
 };
 
+function handleProject(name) {
+  return {
+    ["info." + name + ".group"]: 0,
+    ["info." + name + ".message"]: 0,
+    ["info." + name + ".friend"]: 0,
+  };
+}
+
+exports.findGroupByUsername = async (req, res, next) => {
+  try {
+    const users = (await db).collection("users");
+    const { username } = req.session.user;
+    const ret1 = await users
+      .aggregate([
+        {
+          $match: {
+            username,
+          },
+        },
+        {
+          $project: {
+            group: 1,
+          },
+        },
+        {
+          $unwind: "$group",
+        },
+        {
+          $match: {
+            "group.private": true,
+          },
+        },
+        {
+          $lookup: {
+            from: "group",
+            localField: "group.group_id",
+            foreignField: "room_id",
+            as: "info",
+          },
+        },
+        {
+          $unwind: "$info",
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "info.user_a",
+            foreignField: "username",
+            as: "info.user_a",
+          },
+        },
+        {
+          $unwind: "$info.user_a",
+        },
+        {
+          $project: handleProject("user_a"),
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "info.user_b",
+            foreignField: "username",
+            as: "info.user_b",
+          },
+        },
+        {
+          $unwind: "$info.user_b",
+        },
+        {
+          $project: handleProject("user_b"),
+        },
+      ])
+      .toArray();
+    console.log(ret1);
+    const ret2 = await users
+      .aggregate([
+        {
+          $match: {
+            username,
+          },
+        },
+        {
+          $project: {
+            group: 1,
+          },
+        },
+        {
+          $unwind: "$group",
+        },
+        {
+          $match: {
+            "group.private": false,
+          },
+        },
+        {
+          $lookup: {
+            from: "group",
+            localField: "group.group_id",
+            foreignField: "room_id",
+            as: "info",
+          },
+        },
+        {
+          $unwind: "$info",
+        },
+      ])
+      .toArray();
+    const ret = ret1.concat(ret2);
+    res.send(
+      ret.map((v) => {
+        if (v.info.private) {
+          return {
+            ...v.group,
+            ...v.info,
+            room_name:
+              v.info.user_a.username === username
+                ? v.info.user_b
+                : v.info.user_a,
+          };
+        }
+        return {
+          ...v.group,
+          ...v.info,
+        };
+      })
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("服务端出错");
+  }
+};
+
 exports.updateUserInfo = async (req, res, next) => {
   try {
     let users = (await db).collection("users");

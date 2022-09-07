@@ -22,6 +22,7 @@ import { withUseParamsHooksHOC } from "../../tools/withUseParamsHooksHOC.jsx";
 import { LoadingOutlined, PlusOutlined, SkinOutlined } from "@ant-design/icons";
 const { get_info } = actions;
 import moment from "moment";
+import { momentFormat } from "../../../constant/index";
 
 import axios from "axios";
 
@@ -251,9 +252,9 @@ const FormItem = (props) => {
               ) : (
                 <>
                   <DatePicker
-                    defaultValue={moment(record, "YYYY年MM月DD日")}
+                    defaultValue={moment(record, momentFormat.toDay)}
                     onChange={(value) => {
-                      setValue(value ? value.format("YYYY年MM月DD日") : "");
+                      setValue(value ? value.format(momentFormat.toDay) : "");
                     }}
                   ></DatePicker>
                   <div className="btn-control">

@@ -16,6 +16,7 @@ import EditorWarp from "./EditorWarp.jsx";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { actions } from "../../redux/chatroom.js";
+import { momentFormat } from "../../../constant";
 const { get_group, close_window, open_window } = actions;
 
 const { Panel } = Collapse;
@@ -24,41 +25,29 @@ const { TabPane } = Tabs;
 class ChatRoom extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      data: [
-        {
-          author: "Han Solo",
-          avatar: "https://joeschmoe.io/api/v1/random",
-          content: (
-            <p>
-              We supply a series of design principles, practical patterns and
-              high quality design resources (Sketch and Axure), to help people
-              create their product prototypes beautifully and efficiently.
-            </p>
-          ),
-          datetime: <span>{moment().subtract(1, "days").fromNow()}</span>,
-        },
-        {
-          author: "Han Solo",
-          avatar: "https://joeschmoe.io/api/v1/random",
-          content: (
-            <p>
-              We supply a series of design principles, practical patterns and
-              high quality design resources (Sketch and Axure), to help people
-              create their product prototypes beautifully and efficiently.
-            </p>
-          ),
-          datetime: <span>{moment().subtract(2, "days").fromNow()}</span>,
-        },
-      ],
-    };
   }
 
   render() {
     console.log(this.props);
     const { friendArray, groupArray, talkWindow } = this.props;
-    const { target } = talkWindow;
+    let target = null;
+    if (talkWindow.show) {
+      const findArr = [];
+      let obj;
+      if (talkWindow.private) {
+        obj = friendArray.find((v) => v.sort_name === talkWindow.target.sort);
+      } else {
+        obj = groupArray.find((v) => v.sort_name === talkWindow.target.sort);
+      }
+      if (Array.isArray(obj.arr)) {
+        obj.arr.forEach((e) => {
+          findArr.push(e);
+        });
+      }
+      target = findArr.find(
+        (value) => value.room_id === talkWindow.target.room_id
+      );
+    }
     return (
       <div className="talk-room component">
         <div className="list">
@@ -75,7 +64,11 @@ class ChatRoom extends React.Component {
                             <List.Item
                               className="friend"
                               onClick={() => {
-                                this.props.open_window(true, item.room_id);
+                                this.props.open_window(
+                                  true,
+                                  item.sort,
+                                  item.room_id
+                                );
                               }}
                             >
                               <List.Item.Meta
@@ -108,7 +101,11 @@ class ChatRoom extends React.Component {
                             <List.Item
                               className="friend"
                               onClick={() => {
-                                this.props.open_window(false, item.room_id);
+                                this.props.open_window(
+                                  false,
+                                  item.sort,
+                                  item.room_id
+                                );
                               }}
                             >
                               <List.Item.Meta
@@ -140,50 +137,46 @@ class ChatRoom extends React.Component {
                     height: "100%",
                   }}
                 >
-                  <div
-                    className="loading-history"
-                    onClick={() =>
-                      this.setState({
-                        data: [
-                          {
-                            author: "Han Solo",
-                            avatar: "https://joeschmoe.io/api/v1/random",
-                            content: <p>新增的</p>,
-                            datetime: (
-                              <span>
-                                {moment().subtract(2, "days").fromNow()}
-                              </span>
-                            ),
-                          },
-                          ...this.state.data,
-                        ],
-                      })
-                    }
-                  >
+                  <div className="loading-history" onClick={() => {}}>
                     加载聊天记录
                   </div>
                   <div className="content-warp">
                     <List
                       className="comment-list"
                       itemLayout="horizontal"
-                      dataSource={this.state.data}
-                      renderItem={(item) => (
-                        <li>
-                          <Comment
-                            actions={item.actions}
-                            author={item.author}
-                            avatar={item.avatar}
-                            content={item.content}
-                            datetime={item.datetime}
-                          />
-                        </li>
-                      )}
+                      dataSource={target.showMSG}
+                      renderItem={(item) => {
+                        console.log("item:", item);
+                        const { time, content } = item;
+                        const { head_picture, username } = item.userObj;
+                        return (
+                          <li>
+                            <Comment
+                              author={username}
+                              avatar={head_picture}
+                              content={
+                                <div
+                                  dangerouslySetInnerHTML={{ __html: content }}
+                                ></div>
+                              }
+                              datetime={moment(
+                                time,
+                                momentFormat.toSec
+                              ).fromNow()}
+                            />
+                          </li>
+                        );
+                      }}
                     />
                   </div>
                 </Card>
               </div>
               <div className="input">
-                <EditorWarp></EditorWarp>
+                <EditorWarp
+                  close_window={this.props.close_window}
+                  target={target}
+                  userInfo={this.props.global.userInfo}
+                ></EditorWarp>
               </div>
             </div>
             <div className="info-area">
@@ -194,25 +187,25 @@ class ChatRoom extends React.Component {
                 ></Image>
 
                 <h2>
-                  <strong>{target.room_name}</strong>
+                  <strong>{target.room_name.username}</strong>
                 </h2>
                 <Divider></Divider>
                 <ul className="user-info-inner">
                   <li>
                     <label>性别：</label>
-                    {target.sex}
+                    {target.room_name.sex}
                   </li>
                   <li>
                     <label>生日：</label>
-                    {target.birthday}
+                    {target.room_name.birthday}
                   </li>
                   <li>
                     <label>所在城市：</label>
-                    {target.area}
+                    {target.room_name.area}
                   </li>
                   <li>
                     <label>个性签名：</label>
-                    {target.words}
+                    {target.room_name.words}
                   </li>
                 </ul>
               </div>

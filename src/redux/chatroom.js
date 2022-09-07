@@ -25,7 +25,10 @@ const initialState = {
   talkWindow: {
     show: false,
     private: null,
-    target: {},
+    target: {
+      sort: null,
+      room_id: null,
+    },
   },
 };
 
@@ -53,38 +56,47 @@ export const actions = {
       data,
     };
   },
-  socket_tips(privateSign, name, data) {
+  socket_tips(privateSign, sort, name, data) {
     return {
       type: actionsType.SOCKET_ON_TIPS,
+      sort,
+      data,
       privateSign,
       name,
     };
   },
-  socket_message(privateSign, name, data) {
+  socket_message(privateSign, sort, name, data) {
     return {
       type: actionsType.SOCKET_ON_MESSAGE,
+      sort,
+      data,
       privateSign,
       name,
     };
   },
-  socket_delete(privateSign, name, data) {
+  socket_delete(privateSign, sort, name, data) {
     return {
       type: actionsType.SOCKET_ON_DELETE,
+      sort,
+      data,
       privateSign,
       name,
     };
   },
-  socket_update(privateSign, name, data) {
+  socket_update(privateSign, sort, name, data) {
     return {
       type: actionsType.SOCKET_ON_UPDATE,
+      sort,
+      data,
       privateSign,
       name,
     };
   },
-  open_window(privateSign, name) {
+  open_window(privateSign, sort, name) {
     return {
       type: actionsType.OPEN_TALK_WINDOW,
       privateSign,
+      sort,
       name,
     };
   },
@@ -109,26 +121,14 @@ export function reducer(state = initialState, action) {
       };
     }
     case actionsType.OPEN_TALK_WINDOW: {
-      const { privateSign, name } = action;
-      let target = null;
-      const findArr = [];
-      if (privateSign) {
-        state.friendArray.forEach((e) => {
-          findArr.push(...e.arr);
-        });
-      } else {
-        state.groupArray.forEach((e) => {
-          findArr.push(...e.arr);
-        });
-      }
-      console.log(findArr, "fuck");
-      target = findArr.find((value) => value.room_id === name);
+      const { privateSign, name, sort } = action;
+
       return {
         ...state,
         talkWindow: {
           show: true,
           private: privateSign,
-          target,
+          target: { sort, room_id: name },
         },
       };
     }
@@ -138,9 +138,59 @@ export function reducer(state = initialState, action) {
         talkWindow: {
           show: false,
           private: null,
-          target: {},
+          target: {
+            sort: null,
+            room_id: null,
+          },
         },
       };
+    case actionsType.SOCKET_ON_MESSAGE: {
+      const { privateSign, sort, name, data } = action;
+      console.log(data);
+      if (privateSign) {
+        return {
+          ...state,
+          friendArray: state.friendArray.map((v) => {
+            if (v.sort_name === sort) {
+              return {
+                sort_name: v.sort_name,
+                arr: v.arr.map((e) => {
+                  if (e.room_id === name) {
+                    return {
+                      ...e,
+                      showMSG: [...e.showMSG, data],
+                    };
+                  }
+                  return e;
+                }),
+              };
+            }
+            return v;
+          }),
+        };
+      } else {
+        return {
+          ...state,
+          groupArray: state.groupArray.map((v) => {
+            if (v.sort_name === sort) {
+              return {
+                sort_name: v.sort_name,
+                arr: v.arr.map((e) => {
+                  if (e.room_id === name) {
+                    return {
+                      ...e,
+                      showMSG: [...e.showMSG, data],
+                    };
+                  }
+                  return e;
+                }),
+              };
+            }
+            return v;
+          }),
+        };
+      }
+    }
     default:
       return state;
   }

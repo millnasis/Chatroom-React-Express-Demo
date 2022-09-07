@@ -9,6 +9,8 @@ import io from "socket.io-client";
 import { actionsType, actions } from "../redux/chatroom.js";
 const { socket_tips, socket_delete, socket_message, socket_update } = actions;
 
+import store from "../redux/store.js";
+
 export function* sendToGetGroup() {
   while (true) {
     try {
@@ -21,17 +23,17 @@ export function* sendToGetGroup() {
           e.socket = e.private ? io("/single") : io("/group");
           e.socket.emit("room", e.room_id);
           e.showMSG = [];
-          e.socket.on("tips", function* (data) {
-            yield put(socket_tips(e.private, e.room_id, data));
+          e.socket.on("tips", function (data) {
+            store.dispatch(socket_tips(e.private, e.sort, e.room_id, data));
           });
-          e.socket.on("message", function* (data) {
-            yield put(socket_message(e.private, e.room_id, data));
+          e.socket.on("message", function (data) {
+            store.dispatch(socket_message(e.private, e.sort, e.room_id, data));
           });
-          e.socket.on("delete", function* (data) {
-            yield put(socket_delete(e.private, e.room_id, data));
+          e.socket.on("delete", function (data) {
+            store.dispatch(socket_delete(e.private, e.sort, e.room_id, data));
           });
-          e.socket.on("update", function* (data) {
-            yield put(socket_update(e.private.e.room_id, data));
+          e.socket.on("update", function (data) {
+            store.dispatch(socket_update(e.private, e.sort, e.room_id, data));
           });
           if (e.private) {
             friendArray.push(e);

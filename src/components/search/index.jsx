@@ -1,35 +1,13 @@
 import React from "react";
-import { Avatar, Button, Card, Divider, Input, Tabs, Typography } from "antd";
+import { Avatar, Button, Card, Divider, Input, Tabs } from "antd";
 import "./index.scss";
-
-const friendData = [
-  {
-    avatar:
-      "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201901%2F19%2F20190119105005_uJPTs.thumb.700_0.jpeg&refer=http%3A%2F%2Fb-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1664594908&t=5adcfce282483b7668306e536669a565",
-    username: "kkk",
-    msg: "我是嫩爹",
-  },
-  {
-    avatar:
-      "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201901%2F19%2F20190119105005_uJPTs.thumb.700_0.jpeg&refer=http%3A%2F%2Fb-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1664594908&t=5adcfce282483b7668306e536669a565",
-    username: "kkk",
-    msg: "我是嫩爹",
-  },
-  {
-    avatar:
-      "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201901%2F19%2F20190119105005_uJPTs.thumb.700_0.jpeg&refer=http%3A%2F%2Fb-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1664594908&t=5adcfce282483b7668306e536669a565",
-    username: "kkk",
-    msg: "我是嫩爹",
-  },
-  {
-    avatar:
-      "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201901%2F19%2F20190119105005_uJPTs.thumb.700_0.jpeg&refer=http%3A%2F%2Fb-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1664594908&t=5adcfce282483b7668306e536669a565",
-    username: "kkk",
-    msg: "我是嫩爹",
-  },
-];
+import { actions } from "../../redux/search.js";
+import { bindActionCreators } from "redux";
+import { connect } from "react-redux";
+const { get_group_search, get_user_search } = actions;
 
 function SingleCard(props) {
+  console.log(props);
   return (
     <div className="single-card">
       <Avatar src={props.avatar} className="card-avatar"></Avatar>
@@ -61,19 +39,23 @@ class Search extends React.Component {
                     className="search-bar"
                     enterButton="搜索"
                     placeholder="输入昵称"
+                    onSearch={(value) => this.props.get_user_search(value)}
                     size="large"
                   ></Input.Search>
                   <Divider></Divider>
                   <Card>
-                    {friendData.map((v, i) => (
-                      <Card.Grid className="search-card-grid" key={i}>
-                        <SingleCard
-                          avatar={v.avatar}
-                          msg={v.msg}
-                          username={v.username}
-                        ></SingleCard>
-                      </Card.Grid>
-                    ))}
+                    {this.props.showUserSearchArr.map((v, i) => {
+                      const { username, head_picture, area, sex } = v;
+                      return (
+                        <Card.Grid className="search-card-grid" key={username}>
+                          <SingleCard
+                            avatar={head_picture}
+                            msg={`${sex} ${area.join("")}`}
+                            username={username}
+                          ></SingleCard>
+                        </Card.Grid>
+                      );
+                    })}
                   </Card>
                 </div>
               </Tabs.TabPane>
@@ -83,19 +65,23 @@ class Search extends React.Component {
                     className="search-bar"
                     enterButton="搜索"
                     placeholder="输入群聊名称"
+                    onSearch={(value) => this.props.get_group_search(value)}
                     size="large"
                   ></Input.Search>
                   <Divider></Divider>
                   <Card>
-                    {friendData.map((v, i) => (
-                      <Card.Grid className="search-card-grid" key={i}>
-                        <SingleCard
-                          avatar={v.avatar}
-                          msg={v.msg}
-                          username={v.username}
-                        ></SingleCard>
-                      </Card.Grid>
-                    ))}
+                    {this.props.showGroupSearchArr.map((v, i) => {
+                      const { head_picture, room_name, room_id, member } = v;
+                      return (
+                        <Card.Grid className="search-card-grid" key={room_id}>
+                          <SingleCard
+                            avatar={head_picture}
+                            msg={`群聊共${member.length}人`}
+                            username={room_name}
+                          ></SingleCard>
+                        </Card.Grid>
+                      );
+                    })}
                   </Card>
                 </div>
               </Tabs.TabPane>
@@ -107,4 +93,17 @@ class Search extends React.Component {
   }
 }
 
-export default Search;
+function mapStateToProps(state) {
+  return {
+    ...state.search,
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    get_group_search: bindActionCreators(get_group_search, dispatch),
+    get_user_search: bindActionCreators(get_user_search, dispatch),
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Search);

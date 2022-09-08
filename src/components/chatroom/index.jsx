@@ -16,8 +16,8 @@ import EditorWarp from "./EditorWarp.jsx";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { actions } from "../../redux/chatroom.js";
-import { momentFormat } from "../../../constant";
-const { get_group, close_window, open_window } = actions;
+const { get_group, close_window, open_window, get_record, register_menu_item } =
+  actions;
 
 const { Panel } = Collapse;
 const { TabPane } = Tabs;
@@ -47,6 +47,13 @@ class ChatRoom extends React.Component {
       target = findArr.find(
         (value) => value.room_id === talkWindow.target.room_id
       );
+      if (target.showMSG.length === 0) {
+        this.props.get_record(
+          talkWindow.private,
+          talkWindow.target.sort,
+          talkWindow.target.room_id
+        );
+      }
     }
     return (
       <div className="talk-room component">
@@ -137,7 +144,21 @@ class ChatRoom extends React.Component {
                     height: "100%",
                   }}
                 >
-                  <div className="loading-history" onClick={() => {}}>
+                  <div
+                    className="loading-history"
+                    onClick={() => {
+                      if (target.showMSG[0].sys) {
+                        return;
+                      }
+                      this.props.get_record(
+                        talkWindow.private,
+                        talkWindow.target.sort,
+                        talkWindow.target.room_id,
+                        3,
+                        target.showMSG.length
+                      );
+                    }}
+                  >
                     加载聊天记录
                   </div>
                   <div className="content-warp">
@@ -146,9 +167,18 @@ class ChatRoom extends React.Component {
                       itemLayout="horizontal"
                       dataSource={target.showMSG}
                       renderItem={(item) => {
-                        console.log("item:", item);
-                        const { time, content } = item;
+                        const { time, content, sys } = item;
                         const { head_picture, username } = item.userObj;
+                        if (sys) {
+                          return (
+                            <li>
+                              <Comment
+                                author={username}
+                                content={content}
+                              ></Comment>
+                            </li>
+                          );
+                        }
                         return (
                           <li>
                             <Comment
@@ -159,10 +189,7 @@ class ChatRoom extends React.Component {
                                   dangerouslySetInnerHTML={{ __html: content }}
                                 ></div>
                               }
-                              datetime={moment(
-                                time,
-                                momentFormat.toSec
-                              ).fromNow()}
+                              datetime={moment(new Date(time)).fromNow()}
                             />
                           </li>
                         );
@@ -176,6 +203,8 @@ class ChatRoom extends React.Component {
                   close_window={this.props.close_window}
                   target={target}
                   userInfo={this.props.global.userInfo}
+                  register_menu_item={this.props.register_menu_item}
+                  register={this.props.register}
                 ></EditorWarp>
               </div>
             </div>
@@ -229,6 +258,8 @@ function mapDispatch(dispatch) {
     get_group: bindActionCreators(get_group, dispatch),
     close_window: bindActionCreators(close_window, dispatch),
     open_window: bindActionCreators(open_window, dispatch),
+    get_record: bindActionCreators(get_record, dispatch),
+    register_menu_item: bindActionCreators(register_menu_item, dispatch),
   };
 }
 

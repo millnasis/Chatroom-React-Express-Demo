@@ -3,6 +3,7 @@ import { combineReducers } from "redux";
 import { reducer as loginReducer } from "./login.js";
 import { reducer as infoReducer } from "./info.js";
 import { reducer as chatroomReducer } from "./chatroom.js";
+import { reducer as searchReducer } from "./search.js";
 
 // 初始状态
 const initialState = {
@@ -113,4 +114,5 @@ export default combineReducers({
   login: loginReducer,
   info: infoReducer,
   chatroom: chatroomReducer,
+  search: searchReducer,
 });

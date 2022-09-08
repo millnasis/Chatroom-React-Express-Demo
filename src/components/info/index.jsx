@@ -175,7 +175,6 @@ const pro = [];
 
 const FormItem = (props) => {
   const { sendToUpdate, username, name, content } = props;
-  // console.log(name, username, content);
   const sendMethod = async () => {
     try {
       const ret = await sendToUpdate(username, name, value);
@@ -504,6 +503,7 @@ class Info extends React.Component {
   }
 
   render() {
+    console.log(this.props);
     let {
       age,
       foundtime,

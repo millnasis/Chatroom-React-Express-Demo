@@ -30,6 +30,7 @@ const initialState = {
       room_id: null,
     },
   },
+  register: false,
 };
 
 export const actionsType = {
@@ -41,6 +42,9 @@ export const actionsType = {
   SOCKET_ON_MESSAGE: "SOCKET_ON_MESSAGE",
   SOCKET_ON_DELETE: "SOCKET_ON_DELETE",
   SOCKET_ON_UPDATE: "SOCKET_ON_UPDATE",
+  SEND_TO_GET_RECORD: "SEND_TO_GET_RECORD",
+  RESPONSE_RECORD: "RESPONSE_RECORD",
+  REGISTER_MENU_ITEM: "REGISTER_MENU_ITEM",
 };
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
@@ -105,6 +109,30 @@ export const actions = {
       type: actionsType.CLOSE_TALK_WINDOW,
     };
   },
+  get_record(privateSign, sort, name, limit = 3, skip = 0) {
+    return {
+      type: actionsType.SEND_TO_GET_RECORD,
+      privateSign,
+      sort,
+      name,
+      limit,
+      skip,
+    };
+  },
+  response_record(privateSign, sort, name, data) {
+    return {
+      type: actionsType.RESPONSE_RECORD,
+      privateSign,
+      sort,
+      name,
+      data,
+    };
+  },
+  register_menu_item() {
+    return {
+      type: actionsType.REGISTER_MENU_ITEM,
+    };
+  },
 };
 
 // 状态管理器
@@ -112,6 +140,11 @@ export const actions = {
 // 第二个参数是传入的action，通常是由上面action生成器制作而成
 export function reducer(state = initialState, action) {
   switch (action.type) {
+    case actionsType.REGISTER_MENU_ITEM:
+      return {
+        ...state,
+        register: true,
+      };
     case actionsType.RESPONSE_GROUP_ARRAY: {
       return {
         ...state,
@@ -146,7 +179,6 @@ export function reducer(state = initialState, action) {
       };
     case actionsType.SOCKET_ON_MESSAGE: {
       const { privateSign, sort, name, data } = action;
-      console.log(data);
       if (privateSign) {
         return {
           ...state,
@@ -180,6 +212,52 @@ export function reducer(state = initialState, action) {
                     return {
                       ...e,
                       showMSG: [...e.showMSG, data],
+                    };
+                  }
+                  return e;
+                }),
+              };
+            }
+            return v;
+          }),
+        };
+      }
+    }
+    case actionsType.RESPONSE_RECORD: {
+      const { privateSign, sort, name, data } = action;
+      if (privateSign) {
+        return {
+          ...state,
+          friendArray: state.friendArray.map((v) => {
+            if (v.sort_name === sort) {
+              return {
+                sort_name: v.sort_name,
+                arr: v.arr.map((e) => {
+                  if (e.room_id === name) {
+                    return {
+                      ...e,
+                      showMSG: [...data.reverse(), ...e.showMSG],
+                    };
+                  }
+                  return e;
+                }),
+              };
+            }
+            return v;
+          }),
+        };
+      } else {
+        return {
+          ...state,
+          groupArray: state.groupArray.map((v) => {
+            if (v.sort_name === sort) {
+              return {
+                sort_name: v.sort_name,
+                arr: v.arr.map((e) => {
+                  if (e.room_id === name) {
+                    return {
+                      ...e,
+                      showMSG: [...data.reverse(), ...e.showMSG],
                     };
                   }
                   return e;

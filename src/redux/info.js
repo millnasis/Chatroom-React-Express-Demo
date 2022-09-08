@@ -1,6 +1,13 @@
+export const totalIdentity = {
+  ME: "MYSELFT",
+  STRANGER: "STRANGER",
+  FRIEND: "FRIEND",
+};
+
 // 初始状态
 const initialState = {
   targetInfo: {},
+  identity: null,
 };
 
 export const actionsType = {
@@ -16,10 +23,11 @@ export const actions = {
       username,
     };
   },
-  response_info(data) {
+  response_info(data, identity) {
     return {
       type: actionsType.RESPONSE_TARGET_INFO,
       data,
+      identity,
     };
   },
 };
@@ -29,11 +37,13 @@ export const actions = {
 // 第二个参数是传入的action，通常是由上面action生成器制作而成
 export function reducer(state = initialState, action) {
   switch (action.type) {
-    case actionsType.RESPONSE_TARGET_INFO:
+    case actionsType.RESPONSE_TARGET_INFO: {
       return {
         ...state,
         targetInfo: action.data,
+        identity: action.identity,
       };
+    }
     default:
       return state;
   }

@@ -48,3 +48,39 @@ export function* sendToGetGroup() {
     }
   }
 }
+
+export function* sendToGetRecord() {
+  while (true) {
+    try {
+      const action = yield take(actionsType.SEND_TO_GET_RECORD);
+      const { privateSign, sort, name, limit, skip } = action;
+      const response = yield call(axios.post, "/api/records", {
+        room_id: name,
+        skip,
+        limit,
+      });
+      if (response && response.status === 200) {
+        yield put(
+          actions.response_record(
+            privateSign,
+            sort,
+            name,
+            response.data.length === 0
+              ? [
+                  {
+                    content: "已无更多记录",
+                    userObj: { username: "系统消息" },
+                    sys: true,
+                  },
+                ]
+              : response.data.map((v) => {
+                  return v.recording;
+                })
+          )
+        );
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}

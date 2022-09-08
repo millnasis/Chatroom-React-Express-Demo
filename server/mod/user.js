@@ -295,7 +295,19 @@ exports.search = async (req, res, next) => {
       // mongodb中如果想要进行包含查询，那么需要使用{$regex:正则或者字符串} 这样的形式
     };
     let users = (await db).collection("users");
-    let ret = await users.find(find).toArray();
+    let ret = await users
+      .aggregate([
+        {
+          $match: find,
+        },
+        {
+          $skip: +req.query.skip,
+        },
+        {
+          $limit: +req.query.limit,
+        },
+      ])
+      .toArray();
     if (ret.length === 0) {
       res.status(404).send("搜索无结果");
       return;
@@ -309,9 +321,33 @@ exports.search = async (req, res, next) => {
       owner: { $regex: req.query.word },
     };
     let group = (await db).collection("group");
-    let ret1 = await group.find(find1).toArray();
+    let ret1 = await group
+      .aggregate([
+        {
+          $match: find1,
+        },
+        {
+          $skip: +req.query.skip,
+        },
+        {
+          $limit: +req.query.limit,
+        },
+      ])
+      .toArray();
     console.log(ret1);
-    let ret2 = await group.find(find2).toArray();
+    let ret2 = await group
+      .aggregate([
+        {
+          $match: find2,
+        },
+        {
+          $skip: +req.query.skip,
+        },
+        {
+          $limit: +req.query.limit,
+        },
+      ])
+      .toArray();
     console.log(find2, ret2);
     let ret = ret1.concat(ret2);
     ret = unique(ret);
@@ -592,6 +628,12 @@ exports.findMyUser = async (req, res, next) => {
   }
 };
 
+const totalIdentity = {
+  ME: "MYSELFT",
+  STRANGER: "STRANGER",
+  FRIEND: "FRIEND",
+};
+
 exports.findUserByName = async (req, res, next) => {
   let query = {
     username: req.params.username,
@@ -604,7 +646,18 @@ exports.findUserByName = async (req, res, next) => {
     res.status(403).send("无用户");
     return;
   }
-  res.send(ret[0]);
+  let identity;
+  if (ret[0].username === req.session.user.username) {
+    identity = totalIdentity.ME;
+  } else if (ret[0].friend.findIndex((v) => (v === ret[0].username) !== -1)) {
+    identity = totalIdentity.FRIEND;
+  } else {
+    identity = totalIdentity.STRANGER;
+  }
+  res.send({
+    userInfo: ret[0],
+    identity,
+  });
 };
 
 exports.mainIndex = async (req, res, next) => {
@@ -653,12 +706,17 @@ exports.registerHandle = async (req, res, next) => {
       username: req.body.username,
       permit: "user",
       head_picture: "/img/logo.png",
-      words: "编辑个性签名",
+      words: "无",
       group: [],
       message: [],
+      friend: [],
       age: "0",
-      foundtime: Date.now(),
+      foundtime: new Date(),
       sex: "男",
+      area: [],
+      birthday: "",
+      email: "",
+      cover: "",
     };
     let ret2 = await users.insertOne(myUser);
     console.log(ret2);
@@ -679,6 +737,15 @@ exports.uploadIMG = async (req, res, next) => {
   res.send(req.fileurl);
 };
 
+exports.uploadImgWang = async (req, res, next) => {
+  res.send({
+    errno: 0, // 注意：值是数字，不能是字符串
+    data: {
+      url: req.fileurl,
+    },
+  });
+};
+
 exports.checkUploadIMG = async (req, res, next) => {
   if (!req.session.user) {
     res.status(403).send("没有权限");
@@ -691,17 +758,27 @@ exports.getRecording = async (req, res, next) => {
   let records = (await db).collection("records");
   let ret = await records
     .aggregate([
-      { $unwind: "$recording" },
       { $match: { room_id: req.body.room_id } },
+      { $unwind: "$recording" },
       { $project: { recording: 1 } },
       { $sort: { "recording.time": -1 } },
       // $sort 对象中的key表示排序的根据，后面1和-1表示升序和降序
-      { $skip: req.body.skip },
-      { $limit: req.body.limit },
+      { $skip: +req.body.skip },
+      { $limit: +req.body.limit },
+      {
+        $lookup: {
+          from: "users",
+          localField: "recording.username",
+          foreignField: "username",
+          as: "recording.userObj",
+        },
+      },
+      {
+        $unwind: "$recording.userObj",
+      },
     ])
     .toArray();
   // 与find一样，必须使用toArray()
-  console.log(ret);
   res.send(ret);
 };
 /*db.group.aggregate([

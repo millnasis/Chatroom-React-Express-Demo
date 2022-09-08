@@ -1,4 +1,6 @@
 const db = require("../mod/index");
+const moment = require("moment");
+const { momentFormat } = require("../../constant");
 module.exports = (io) => {
   const transitMessage = io.of("/transitMessage");
   const groupTalk = io.of("/group");
@@ -66,7 +68,14 @@ module.exports = (io) => {
         if (roomName) {
           await records.updateOne(
             { room_id: roomName },
-            { $push: { recording: data } }
+            {
+              $push: {
+                recording: {
+                  ...data,
+                  time: new Date(data.time),
+                },
+              },
+            }
           );
           const userObj = await users
             .aggregate([

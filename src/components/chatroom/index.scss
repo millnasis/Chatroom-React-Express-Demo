@@ -46,6 +46,11 @@
             }
           }
           .content-warp {
+            .comment-list {
+              img {
+                max-width: 100%;
+              }
+            }
             height: 90%;
             overflow-y: scroll;
           }
@@ -56,7 +61,6 @@
         height: 30%;
         border: 1px solid #ccc;
         z-index: 1000;
-        
       }
     }
     .info-area {

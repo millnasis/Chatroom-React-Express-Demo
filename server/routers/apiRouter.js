@@ -17,6 +17,13 @@ router.post(
   upload.single("picture"),
   user.uploadIMG
 );
+router.post(
+  "/uploadIMG-wang",
+  check.session,
+  user.checkUploadIMG,
+  upload.single("wangeditor-pic"),
+  user.uploadImgWang
+);
 
 router.get("/userMessage", user.getMessage);
 

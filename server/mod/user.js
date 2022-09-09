@@ -98,7 +98,7 @@ exports.handleMessage = async (req, res, next) => {
         { room_id: req.body.notice.to },
         { $push: { member: req.body.notice.from } }
       );
-      let ret4 = users.updateOne(
+      let ret4 = await users.updateOne(
         { username: req.body.notice.from },
         {
           $push: {
@@ -109,31 +109,43 @@ exports.handleMessage = async (req, res, next) => {
               to: req.body.notice.to,
               owner: req.body.notice.owner,
               room_name: req.body.notice.room_name,
-              head_picture: req.body.notice.head_picture,
+              private: false,
+              read: false,
             },
           },
         }
       );
       console.log(ret1, ret2);
     }
-    let ret3 = users.updateOne(
+    let ret3 = await users.updateOne(
       { username: req.session.user.username },
-      { $pull: { message: req.body.notice } }
+      {
+        $set: {
+          "message.$[elem].read": true,
+        },
+      },
+      {
+        arrayFilters: [
+          {
+            elem: req.body.notice,
+          },
+        ],
+      }
     );
     let ret = await users
       .find({ username: req.session.user.username })
       .toArray();
     req.session.user = ret[0];
-    res.send("OK");
+    res.send(ret[0]);
   } else if (req.body.notice.messageType === "addFriend") {
     if (req.body.result === "confirm") {
-      let nowDate = Date.now();
+      let nowDate = new Date();
       let group_id =
         req.body.notice.from +
         "_" +
         req.body.notice.to +
         "_" +
-        nowDate.toString();
+        nowDate.getTime();
       let ret1 = await users.updateOne(
         { username: req.body.notice.from },
         {
@@ -157,13 +169,22 @@ exports.handleMessage = async (req, res, next) => {
         room_id: group_id,
         user_a: req.body.notice.to,
         user_b: req.body.notice.from,
-        user_a_head_picture: req.body.notice.to_head_picture,
-        user_b_head_picture: req.body.notice.head_picture,
         private: true,
       });
       let ret4 = users.updateOne(
         { username: req.session.user.username },
-        { $pull: { message: req.body.notice } }
+        {
+          $set: {
+            "message.$[elem].read": true,
+          },
+        },
+        {
+          arrayFilters: [
+            {
+              elem: req.body.notice,
+            },
+          ],
+        }
       );
       let ret5 = users.updateOne(
         { username: req.body.notice.from },
@@ -172,9 +193,10 @@ exports.handleMessage = async (req, res, next) => {
             message: {
               back: "back",
               messageType: req.body.notice.messageType,
-              from: req.body.notice.from,
-              to: req.body.notice.to,
-              head_picture: req.body.notice.head_picture,
+              from: req.body.notice.to,
+              to: req.body.notice.from,
+              read: false,
+              private: true,
             },
           },
         }
@@ -185,7 +207,7 @@ exports.handleMessage = async (req, res, next) => {
           "_" +
           req.body.notice.to +
           "_" +
-          nowDate.toString(),
+          nowDate.getTime(),
         recording: [],
       });
       let ret = await users
@@ -196,7 +218,18 @@ exports.handleMessage = async (req, res, next) => {
     } else if (req.body.result === "confirmBack") {
       let ret3 = users.updateOne(
         { username: req.session.user.username },
-        { $pull: { message: req.body.notice } }
+        {
+          $set: {
+            "message.$[elem].read": true,
+          },
+        },
+        {
+          arrayFilters: [
+            {
+              elem: req.body.notice,
+            },
+          ],
+        }
       );
       let ret = await users
         .find({ username: req.session.user.username })
@@ -207,7 +240,18 @@ exports.handleMessage = async (req, res, next) => {
   } else if (req.body.notice.messageType === "deleteFriend") {
     let ret3 = users.updateOne(
       { username: req.session.user.username },
-      { $pull: { message: req.body.notice } }
+      {
+        $set: {
+          "message.$[elem].read": true,
+        },
+      },
+      {
+        arrayFilters: [
+          {
+            elem: req.body.notice,
+          },
+        ],
+      }
     );
     let ret = await users
       .find({ username: req.session.user.username })
@@ -222,33 +266,33 @@ exports.sendMessage = async (req, res, next) => {
   if (req.body.messageType === "joinGroup") {
     let ret = await users.updateOne(
       { username: req.body.owner },
-      { $push: { message: req.body } }
+      { $push: { message: { read: false, ...req.body, private: false } } }
     );
     console.log(ret);
     res.send("OK");
   } else if (req.body.messageType === "addFriend") {
     let ret = await users.updateOne(
       { username: req.body.to },
-      { $push: { message: req.body } }
+      { $push: { message: { read: false, ...req.body, private: true } } }
     );
     console.log(ret);
     res.send("OK");
   }
 };
 
-exports.getMessage = async (req, res, next) => {
-  if (!req.session.user) {
-    res.status(403).send("无权限");
-    return;
-  }
-  let users = (await db).collection("users");
-  let ret = await users.find({ username: req.session.user.username }).toArray();
-  if (ret.length === 0) {
-    res.status(404).send("无用户");
-    return;
-  }
-  res.send(ret[0].message);
-};
+// exports.getMessage = async (req, res, next) => {
+//   if (!req.session.user) {
+//     res.status(403).send("无权限");
+//     return;
+//   }
+//   let users = (await db).collection("users");
+//   let ret = await users.find({ username: req.session.user.username }).toArray();
+//   if (ret.length === 0) {
+//     res.status(404).send("无用户");
+//     return;
+//   }
+//   res.send(ret[0].message);
+// };
 
 exports.newRoomHandle = async (req, res, next) => {
   let group = (await db).collection("group");
@@ -615,14 +659,61 @@ exports.findMyUser = async (req, res, next) => {
   const user = (await db).collection("users");
   try {
     let userInfo = await user
-      .find({ username: req.session.user.username })
+      .aggregate([
+        {
+          $match: {
+            username: req.session.user.username,
+          },
+        },
+      ])
       .toArray();
     if (userInfo.length === 0) {
       throw Error;
     }
+    let messageArr = await user
+      .aggregate([
+        {
+          $match: {
+            username: req.session.user.username,
+          },
+        },
+        {
+          $project: {
+            message: 1,
+            username: 1,
+          },
+        },
+        {
+          $unwind: "$message",
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "message.from",
+            foreignField: "username",
+            as: "message.from",
+          },
+        },
+        {
+          $unwind: "$message.from",
+        },
+        {
+          $group: {
+            _id: "$username",
+            message: {
+              $push: "$message",
+            },
+          },
+        },
+      ])
+      .toArray();
+    if (messageArr.length > 0) {
+      userInfo[0].message = messageArr[0].message;
+    }
     req.session.user = userInfo[0];
     res.send(req.session.user);
   } catch (error) {
+    console.error(error);
     res.status(404).send("userexist");
     // 返回错误的状态码会让客户端的ajax报错
   }
@@ -649,7 +740,7 @@ exports.findUserByName = async (req, res, next) => {
   let identity;
   if (ret[0].username === req.session.user.username) {
     identity = totalIdentity.ME;
-  } else if (ret[0].friend.findIndex((v) => (v === ret[0].username) !== -1)) {
+  } else if (ret[0].friend.findIndex((v) => v === ret[0].username) !== -1) {
     identity = totalIdentity.FRIEND;
   } else {
     identity = totalIdentity.STRANGER;
@@ -713,9 +804,9 @@ exports.registerHandle = async (req, res, next) => {
       age: "0",
       foundtime: new Date(),
       sex: "男",
-      area: [],
-      birthday: "",
-      email: "",
+      area: ["中国"],
+      birthday: "无",
+      email: "无",
       cover: "",
     };
     let ret2 = await users.insertOne(myUser);

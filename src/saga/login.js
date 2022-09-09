@@ -49,3 +49,40 @@ export function* checkLogin() {
     }
   }
 }
+// 该函数为下面拦截action做封装，仅自用
+function* registerSend(username, password) {
+  // 发送一个action，让UI显示获取请求的动画
+  yield put(UIactions.start_fetch());
+  // 异步请求可能会出错，应放在try-catch中
+  try {
+    // call函数，调用异步请求函数时使用，这里用axios的post方法发送
+    return yield call(axios.post, "/api/register", { username, password });
+  } catch (error) {
+    console.log(error);
+    if (error.response.data === "username") {
+      yield put({ type: UIactionsType.USER_LOGIN_USERNAME_ERROR });
+    } else if (error.response.data === "password") {
+      yield put({ type: UIactionsType.USER_LOGIN_PASSWORD_ERROR });
+    } else if (error.response.data === "userexist") {
+      yield put({ type: UIactionsType.USER_REGISTER_USERNAME_EXIST_ERROR });
+    }
+  } finally {
+    // 发送一个action，让UI停止显示获取请求的动画
+    yield put(UIactions.end_fetch());
+  }
+}
+
+// 将所有需要监听并拦截action的函数导出
+export function* checkRegister() {
+  // generator函数都是有需要的时候就调用一次，所以可以直接使用无限循环处理监听
+  while (true) {
+    // 拦截action
+    let data = yield take(actionsType.SEND_TO_REGISTER);
+    // 调用上面封装好的函数
+    let response = yield call(registerSend, data.username, data.password);
+    // 处理返回
+    if (response && response.status === 200) {
+      yield put(actions.response_register(response.data));
+    }
+  }
+}

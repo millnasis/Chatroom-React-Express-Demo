@@ -15,12 +15,12 @@ import {
 } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 
-import { actions } from "../../redux/info.js";
+import { actions, totalIdentity } from "../../redux/info.js";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { withUseParamsHooksHOC } from "../../tools/withUseParamsHooksHOC.jsx";
 import { LoadingOutlined, PlusOutlined, SkinOutlined } from "@ant-design/icons";
-const { get_info } = actions;
+const { get_info, add_friend } = actions;
 import moment from "moment";
 import { momentFormat } from "../../../constant/index";
 
@@ -174,7 +174,7 @@ const options = [
 const pro = [];
 
 const FormItem = (props) => {
-  const { sendToUpdate, username, name, content } = props;
+  const { sendToUpdate, username, name, content, identity } = props;
   const sendMethod = async () => {
     try {
       const ret = await sendToUpdate(username, name, value);
@@ -204,33 +204,40 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {!edit ? (
-                <>
-                  {record}
-                  <span className="edit-control" onClick={() => setEdit(true)}>
-                    <EditOutlined></EditOutlined>&nbsp;编辑
-                  </span>
-                </>
+              {identity === totalIdentity.ME ? (
+                !edit ? (
+                  <>
+                    {record}
+                    <span
+                      className="edit-control"
+                      onClick={() => setEdit(true)}
+                    >
+                      <EditOutlined></EditOutlined>&nbsp;编辑
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Cascader
+                      options={options}
+                      value={value}
+                      onChange={(value, selectOtion) => {
+                        setValue(value);
+                      }}
+                      placeholder="请选择"
+                    />
+                    <div className="btn-control">
+                      <Button type="primary" onClick={sendMethod}>
+                        保存
+                      </Button>
+                      <Button type="default" onClick={() => setEdit(false)}>
+                        取消
+                      </Button>
+                    </div>
+                  </>
+                )
               ) : (
-                <>
-                  <Cascader
-                    options={options}
-                    value={value}
-                    onChange={(value, selectOtion) => {
-                      setValue(value);
-                    }}
-                    placeholder="请选择"
-                  />
-                  <div className="btn-control">
-                    <Button type="primary" onClick={sendMethod}>
-                      保存
-                    </Button>
-                    <Button type="default" onClick={() => setEdit(false)}>
-                      取消
-                    </Button>
-                  </div>
-                </>
-              )}{" "}
+                record
+              )}
             </div>
           </div>
         </Form.Item>
@@ -241,31 +248,38 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {!edit ? (
-                <>
-                  {record}
-                  <span className="edit-control" onClick={() => setEdit(true)}>
-                    <EditOutlined></EditOutlined>&nbsp;编辑
-                  </span>
-                </>
+              {identity === totalIdentity.ME ? (
+                !edit ? (
+                  <>
+                    {record}
+                    <span
+                      className="edit-control"
+                      onClick={() => setEdit(true)}
+                    >
+                      <EditOutlined></EditOutlined>&nbsp;编辑
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <DatePicker
+                      defaultValue={moment(record, momentFormat.toDay)}
+                      onChange={(value) => {
+                        setValue(value ? value.format(momentFormat.toDay) : "");
+                      }}
+                    ></DatePicker>
+                    <div className="btn-control">
+                      <Button type="primary" onClick={sendMethod}>
+                        保存
+                      </Button>
+                      <Button type="default" onClick={() => setEdit(false)}>
+                        取消
+                      </Button>
+                    </div>
+                  </>
+                )
               ) : (
-                <>
-                  <DatePicker
-                    defaultValue={moment(record, momentFormat.toDay)}
-                    onChange={(value) => {
-                      setValue(value ? value.format(momentFormat.toDay) : "");
-                    }}
-                  ></DatePicker>
-                  <div className="btn-control">
-                    <Button type="primary" onClick={sendMethod}>
-                      保存
-                    </Button>
-                    <Button type="default" onClick={() => setEdit(false)}>
-                      取消
-                    </Button>
-                  </div>
-                </>
-              )}{" "}
+                record
+              )}
             </div>
           </div>
         </Form.Item>
@@ -276,30 +290,37 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {!edit ? (
-                <>
-                  {record}
-                  <span className="edit-control" onClick={() => setEdit(true)}>
-                    <EditOutlined></EditOutlined>&nbsp;编辑
-                  </span>
-                </>
+              {identity === totalIdentity.ME ? (
+                !edit ? (
+                  <>
+                    {record}
+                    <span
+                      className="edit-control"
+                      onClick={() => setEdit(true)}
+                    >
+                      <EditOutlined></EditOutlined>&nbsp;编辑
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      type={"number"}
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                    ></Input>
+                    <div className="btn-control">
+                      <Button type="primary" onClick={sendMethod}>
+                        保存
+                      </Button>
+                      <Button type="default" onClick={() => setEdit(false)}>
+                        取消
+                      </Button>
+                    </div>
+                  </>
+                )
               ) : (
-                <>
-                  <Input
-                    type={"number"}
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                  ></Input>
-                  <div className="btn-control">
-                    <Button type="primary" onClick={sendMethod}>
-                      保存
-                    </Button>
-                    <Button type="default" onClick={() => setEdit(false)}>
-                      取消
-                    </Button>
-                  </div>
-                </>
-              )}{" "}
+                record
+              )}
             </div>
           </div>
         </Form.Item>
@@ -310,32 +331,39 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {!edit ? (
-                <>
-                  {record}
-                  <span className="edit-control" onClick={() => setEdit(true)}>
-                    <EditOutlined></EditOutlined>&nbsp;编辑
-                  </span>
-                </>
+              {identity === totalIdentity.ME ? (
+                !edit ? (
+                  <>
+                    {record}
+                    <span
+                      className="edit-control"
+                      onClick={() => setEdit(true)}
+                    >
+                      <EditOutlined></EditOutlined>&nbsp;编辑
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Radio.Group
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                    >
+                      <Radio value={"男"}>男</Radio>
+                      <Radio value={"女"}>女</Radio>
+                    </Radio.Group>
+                    <div className="btn-control">
+                      <Button type="primary" onClick={sendMethod}>
+                        保存
+                      </Button>
+                      <Button type="default" onClick={() => setEdit(false)}>
+                        取消
+                      </Button>
+                    </div>
+                  </>
+                )
               ) : (
-                <>
-                  <Radio.Group
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                  >
-                    <Radio value={"男"}>男</Radio>
-                    <Radio value={"女"}>女</Radio>
-                  </Radio.Group>
-                  <div className="btn-control">
-                    <Button type="primary" onClick={sendMethod}>
-                      保存
-                    </Button>
-                    <Button type="default" onClick={() => setEdit(false)}>
-                      取消
-                    </Button>
-                  </div>
-                </>
-              )}{" "}
+                record
+              )}
             </div>
           </div>
         </Form.Item>
@@ -346,31 +374,38 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {!edit ? (
-                <>
-                  {record}
-                  <span className="edit-control" onClick={() => setEdit(true)}>
-                    <EditOutlined></EditOutlined>&nbsp;编辑
-                  </span>
-                </>
+              {identity === totalIdentity.ME ? (
+                !edit ? (
+                  <>
+                    {record}
+                    <span
+                      className="edit-control"
+                      onClick={() => setEdit(true)}
+                    >
+                      <EditOutlined></EditOutlined>&nbsp;编辑
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      type={"text"}
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                    ></Input>
+                    <br />
+                    <div className="btn-control">
+                      <Button type="primary" onClick={sendMethod}>
+                        保存
+                      </Button>
+                      <Button type="default" onClick={() => setEdit(false)}>
+                        取消
+                      </Button>
+                    </div>
+                  </>
+                )
               ) : (
-                <>
-                  <Input
-                    type={"text"}
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                  ></Input>
-                  <br />
-                  <div className="btn-control">
-                    <Button type="primary" onClick={sendMethod}>
-                      保存
-                    </Button>
-                    <Button type="default" onClick={() => setEdit(false)}>
-                      取消
-                    </Button>
-                  </div>
-                </>
-              )}{" "}
+                record
+              )}
             </div>
           </div>
         </Form.Item>
@@ -381,31 +416,38 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {!edit ? (
-                <>
-                  {record}
-                  <span className="edit-control" onClick={() => setEdit(true)}>
-                    <EditOutlined></EditOutlined>&nbsp;编辑
-                  </span>
-                </>
+              {identity === totalIdentity.ME ? (
+                !edit ? (
+                  <>
+                    {record}
+                    <span
+                      className="edit-control"
+                      onClick={() => setEdit(true)}
+                    >
+                      <EditOutlined></EditOutlined>&nbsp;编辑
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      type={"email"}
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                    ></Input>
+                    <br />
+                    <div className="btn-control">
+                      <Button type="primary" onClick={sendMethod}>
+                        保存
+                      </Button>
+                      <Button type="default" onClick={() => setEdit(false)}>
+                        取消
+                      </Button>
+                    </div>
+                  </>
+                )
               ) : (
-                <>
-                  <Input
-                    type={"email"}
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                  ></Input>
-                  <br />
-                  <div className="btn-control">
-                    <Button type="primary" onClick={sendMethod}>
-                      保存
-                    </Button>
-                    <Button type="default" onClick={() => setEdit(false)}>
-                      取消
-                    </Button>
-                  </div>
-                </>
-              )}{" "}
+                record
+              )}
             </div>
           </div>
         </Form.Item>
@@ -416,30 +458,37 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {!edit ? (
-                <>
-                  {record}
-                  <span className="edit-control" onClick={() => setEdit(true)}>
-                    <EditOutlined></EditOutlined>&nbsp;编辑
-                  </span>
-                </>
+              {identity === totalIdentity.ME ? (
+                !edit ? (
+                  <>
+                    {record}
+                    <span
+                      className="edit-control"
+                      onClick={() => setEdit(true)}
+                    >
+                      <EditOutlined></EditOutlined>&nbsp;编辑
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Input.TextArea
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                    ></Input.TextArea>
+                    <br />
+                    <div className="btn-control">
+                      <Button type="primary" onClick={sendMethod}>
+                        保存
+                      </Button>
+                      <Button type="default" onClick={() => setEdit(false)}>
+                        取消
+                      </Button>
+                    </div>
+                  </>
+                )
               ) : (
-                <>
-                  <Input.TextArea
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                  ></Input.TextArea>
-                  <br />
-                  <div className="btn-control">
-                    <Button type="primary" onClick={sendMethod}>
-                      保存
-                    </Button>
-                    <Button type="default" onClick={() => setEdit(false)}>
-                      取消
-                    </Button>
-                  </div>
-                </>
-              )}{" "}
+                record
+              )}
             </div>
           </div>
         </Form.Item>
@@ -523,102 +572,115 @@ class Info extends React.Component {
         <div className="user-info-body">
           <div className="cover-warp">
             <div className="change-cover">
-              <ImgCrop rotate aspect={5}>
-                <Upload
-                  action="/api/uploadIMG"
-                  showUploadList={false}
-                  name="picture"
-                  onChange={async (info) => {
-                    if (info.file.status === "uploading") {
-                      this.setState({
-                        cover: { ...this.state.cover, loading: true },
-                      });
-                      return;
-                    }
-
-                    if (info.file.status === "done") {
-                      const ret = await this.sendToUpdate(
-                        username,
-                        "cover",
-                        info.file.response
-                      );
-                      if (!ret) {
+              {this.props.identity === totalIdentity.ME && (
+                <ImgCrop rotate aspect={5}>
+                  <Upload
+                    action="/api/uploadIMG"
+                    showUploadList={false}
+                    name="picture"
+                    onChange={async (info) => {
+                      if (info.file.status === "uploading") {
+                        this.setState({
+                          cover: { ...this.state.cover, loading: true },
+                        });
                         return;
                       }
-                      this.setState({
-                        cover: {
-                          loading: false,
-                          url: info.file.response,
-                        },
-                      });
-                    }
-                  }}
-                >
-                  <span className="change-btn">
-                    <SkinOutlined></SkinOutlined>更换封面
-                  </span>
-                </Upload>
-              </ImgCrop>
+
+                      if (info.file.status === "done") {
+                        const ret = await this.sendToUpdate(
+                          username,
+                          "cover",
+                          info.file.response
+                        );
+                        if (!ret) {
+                          return;
+                        }
+                        this.setState({
+                          cover: {
+                            loading: false,
+                            url: info.file.response,
+                          },
+                        });
+                      }
+                    }}
+                  >
+                    <span className="change-btn">
+                      <SkinOutlined></SkinOutlined>更换封面
+                    </span>
+                  </Upload>
+                </ImgCrop>
+              )}
             </div>
             <img className="cover" src={this.state.cover.url}></img>
           </div>
           <div className="info">
             <div className="avatar-area">
               <div className="avatar-body">
-                <ImgCrop rotate>
-                  <Upload
-                    action="/api/uploadIMG"
-                    listType="picture-card"
-                    showUploadList={false}
-                    name="picture"
-                    onChange={(info) => {
-                      if (info.file.status === "uploading") {
-                        this.setState({
-                          avatar: { ...this.state.avatar, loading: true },
-                        });
-                        return;
-                      }
+                {this.props.identity === totalIdentity.ME ? (
+                  <ImgCrop rotate>
+                    <Upload
+                      action="/api/uploadIMG"
+                      listType="picture-card"
+                      showUploadList={false}
+                      name="picture"
+                      onChange={(info) => {
+                        if (info.file.status === "uploading") {
+                          this.setState({
+                            avatar: { ...this.state.avatar, loading: true },
+                          });
+                          return;
+                        }
 
-                      if (info.file.status === "done") {
-                        // Get this url from response in real world.
-                        this.setState({
-                          avatar: {
-                            loading: false,
-                            url: info.file.response,
-                            change: true,
-                          },
-                        });
-                      }
-                    }}
-                  >
-                    {this.state.avatar.url ? (
-                      <img
-                        src={this.state.avatar.url}
-                        alt="avatar"
-                        style={{
-                          width: "100%",
-                        }}
-                      />
-                    ) : (
-                      <div>
-                        {this.state.avatar.loading ? (
-                          <LoadingOutlined />
-                        ) : (
-                          <PlusOutlined />
-                        )}
-                        <div
+                        if (info.file.status === "done") {
+                          // Get this url from response in real world.
+                          this.setState({
+                            avatar: {
+                              loading: false,
+                              url: info.file.response,
+                              change: true,
+                            },
+                          });
+                        }
+                      }}
+                    >
+                      {this.state.avatar.url ? (
+                        <img
+                          src={this.state.avatar.url}
+                          alt="avatar"
                           style={{
-                            marginTop: 8,
+                            width: "100%",
                           }}
-                        >
-                          Upload
+                        />
+                      ) : (
+                        <div>
+                          {this.state.avatar.loading ? (
+                            <LoadingOutlined />
+                          ) : (
+                            <PlusOutlined />
+                          )}
+                          <div
+                            style={{
+                              marginTop: 8,
+                            }}
+                          >
+                            Upload
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </Upload>
-                </ImgCrop>
-                <p>
-                  {this.state.avatar.change && (
+                      )}
+                    </Upload>
+                  </ImgCrop>
+                ) : (
+                  <img
+                    src={this.state.avatar.url}
+                    alt="avatar"
+                    style={{
+                      width: "100%",
+                      marginBottom: "5px",
+                    }}
+                  />
+                )}
+                {this.state.avatar.change && (
+                  <p>
                     <Button
                       type="primary"
                       onClick={async () => {
@@ -641,8 +703,31 @@ class Info extends React.Component {
                     >
                       保存
                     </Button>
-                  )}
-                </p>
+                  </p>
+                )}
+
+                {this.props.identity === totalIdentity.STRANGER && (
+                  <p>
+                    <Button
+                      type="primary"
+                      onClick={() =>
+                        this.props.add_friend(
+                          this.props.global.userInfo.username,
+                          this.props.targetInfo.username
+                        )
+                      }
+                    >
+                      加为好友
+                    </Button>
+                  </p>
+                )}
+                {this.props.identity === totalIdentity.FRIEND && (
+                  <p>
+                    <Button type="primary" danger>
+                      删除好友
+                    </Button>
+                  </p>
+                )}
               </div>
             </div>
             <div className="info-body">
@@ -660,6 +745,7 @@ class Info extends React.Component {
                   </Form.Item>
                   <Divider></Divider>
                   <FormItem
+                    identity={this.props.identity}
                     sendToUpdate={this.sendToUpdate}
                     username={username}
                     name="sex"
@@ -673,6 +759,7 @@ class Info extends React.Component {
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    identity={this.props.identity}
                     sendToUpdate={this.sendToUpdate}
                     username={username}
                     name="birthday"
@@ -686,6 +773,7 @@ class Info extends React.Component {
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    identity={this.props.identity}
                     sendToUpdate={this.sendToUpdate}
                     username={username}
                     name="age"
@@ -699,6 +787,7 @@ class Info extends React.Component {
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    identity={this.props.identity}
                     sendToUpdate={this.sendToUpdate}
                     username={username}
                     name="area"
@@ -712,6 +801,7 @@ class Info extends React.Component {
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    identity={this.props.identity}
                     sendToUpdate={this.sendToUpdate}
                     username={username}
                     name="email"
@@ -725,6 +815,7 @@ class Info extends React.Component {
                   ></FormItem>
                   <Divider></Divider>
                   <FormItem
+                    identity={this.props.identity}
                     sendToUpdate={this.sendToUpdate}
                     username={username}
                     name="words"
@@ -750,12 +841,14 @@ class Info extends React.Component {
 function mapStateToPorps(state) {
   return {
     ...state.info,
+    global: state.global,
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
     get_info: bindActionCreators(get_info, dispatch),
+    add_friend: bindActionCreators(add_friend, dispatch),
   };
 }
 

@@ -4,11 +4,17 @@ import { reducer as loginReducer } from "./login.js";
 import { reducer as infoReducer } from "./info.js";
 import { reducer as chatroomReducer } from "./chatroom.js";
 import { reducer as searchReducer } from "./search.js";
+import { reducer as messageReducer } from "./message.js";
 
 // 初始状态
 const initialState = {
   userInfo: {},
   login: false,
+  socket: null,
+  notification: {
+    state: -1,
+    content: null,
+  },
 };
 
 export const actionsType = {
@@ -20,14 +26,18 @@ export const actionsType = {
   RESPONSE_REGISTER: "RESPONSE_REGISTER",
   SEND_TO_LOGOUT: "SEND_TO_LOGOUT",
   RESET_USER_INFO: "RESET_USER_INFO",
+  SET_NOTIFICATION: "SET_NOTIFICATION",
+  CLEAR_NOTIFICATION: "CLEAR_NOTIFICATION",
+  RESPONSE_SOCKET_OBJECT: "RESPONSE_SOCKET_OBJECT",
 };
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
 export const actions = {
-  get_user_info(group = false) {
+  get_user_info(group = false, msg) {
     return {
       type: actionsType.SEND_TO_GET_USER_INFO,
       group,
+      msg,
     };
   },
   response_user_info(data) {
@@ -72,6 +82,30 @@ export const actions = {
       type: actionsType.RESET_USER_INFO,
     };
   },
+  /**
+   *
+   * @param {int} state 0为成功 1为错误 2为警告
+   * @param {*} content
+   * @returns
+   */
+  set_notification(state, content) {
+    return {
+      type: actionsType.SET_NOTIFICATION,
+      state,
+      content,
+    };
+  },
+  clear_notification() {
+    return {
+      type: actionsType.CLEAR_NOTIFICATION,
+    };
+  },
+  response_socket(socket) {
+    return {
+      type: actionsType.RESPONSE_SOCKET_OBJECT,
+      socket,
+    };
+  },
 };
 
 // 状态管理器
@@ -103,6 +137,27 @@ export function reducer(state = initialState, action) {
         login: true,
         userInfo: action.data,
       };
+    case actionsType.SET_NOTIFICATION:
+      return {
+        ...state,
+        notification: {
+          state: action.state,
+          content: action.content,
+        },
+      };
+    case actionsType.CLEAR_NOTIFICATION:
+      return {
+        ...state,
+        notification: {
+          state: -1,
+          content: null,
+        },
+      };
+    case actionsType.RESPONSE_SOCKET_OBJECT:
+      return {
+        ...state,
+        socket: action.socket,
+      };
     default:
       return state;
   }
@@ -115,4 +170,5 @@ export default combineReducers({
   info: infoReducer,
   chatroom: chatroomReducer,
   search: searchReducer,
+  message: messageReducer,
 });

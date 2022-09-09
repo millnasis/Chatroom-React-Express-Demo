@@ -1,5 +1,5 @@
 import React from "react";
-import { Avatar, Layout, Menu } from "antd";
+import { Avatar, Layout, Menu, notification } from "antd";
 import { Route, Routes, Link } from "react-router-dom";
 import "./app.scss";
 import ChatRoom from "./components/chatroom/index.jsx";
@@ -15,7 +15,7 @@ import { actions } from "./redux/root";
 import { bindActionCreators } from "redux";
 import Logout from "./components/logout/index.jsx";
 
-const { get_user_info } = actions;
+const { get_user_info, clear_notification } = actions;
 
 const { Content, Footer, Header } = Layout;
 
@@ -59,7 +59,7 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    this.props.get_user_info(this.props.chatroom.initial);
+    this.props.get_user_info(this.props.chatroom.initial, undefined);
   }
 
   componentDidUpdate(prevProps) {
@@ -68,7 +68,7 @@ class App extends React.Component {
       prevProps.location.pathname !== this.props.location.pathname ||
       this.props.login !== prevProps.login
     ) {
-      this.props.get_user_info(this.props.chatroom.initial);
+      this.props.get_user_info(this.props.chatroom.initial, this.props.socket);
       if (this.props.location.pathname !== "/login" && !this.props.login) {
         this.props.navigate("/login");
       } else if (
@@ -77,6 +77,33 @@ class App extends React.Component {
       ) {
         this.props.navigate("/");
       }
+    }
+    if (
+      prevProps.notification.state !== this.props.notification.state &&
+      this.props.notification.state !== -1
+    ) {
+      switch (this.props.notification.state) {
+        case 0:
+          notification.success({
+            message: this.props.notification.content,
+          });
+          break;
+
+        case 1:
+          notification.error({
+            message: this.props.notification.content,
+          });
+          break;
+        case 2:
+          notification.warning({
+            message: this.props.notification.content,
+          });
+          break;
+
+        default:
+          break;
+      }
+      this.props.clear_notification();
     }
   }
 
@@ -133,6 +160,7 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     get_user_info: bindActionCreators(get_user_info, dispatch),
+    clear_notification: bindActionCreators(clear_notification, dispatch),
   };
 }
 

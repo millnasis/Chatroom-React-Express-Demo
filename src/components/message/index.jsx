@@ -1,25 +1,9 @@
 import React from "react";
 import { Avatar, Button, Card, List, Tabs } from "antd";
 import "./index.scss";
-
-const friendMSG = [
-  {
-    avatar: "",
-    username: "kkk",
-    msg: "我是嫩爹",
-  },
-  {
-    avatar: "",
-    username: "kkk",
-    msg: "我是嫩爹",
-  },
-  {
-    avatar: "",
-    username: "kkk",
-    msg: "我是嫩爹",
-  },
-];
-
+import { connect } from "react-redux";
+import { actions } from "../../redux/message.js";
+const {} = actions;
 class Message extends React.Component {
   constructor(props) {
     super(props);
@@ -34,7 +18,7 @@ class Message extends React.Component {
               <Tabs.TabPane tab="好友验证" key="好友验证">
                 <List
                   bordered
-                  dataSource={friendMSG}
+                  dataSource={this.props.showUserMSG}
                   renderItem={(item) => {
                     return (
                       <List.Item
@@ -45,10 +29,13 @@ class Message extends React.Component {
                       >
                         <List.Item.Meta
                           avatar={
-                            <Avatar size={"large"} src={item.avatar}></Avatar>
+                            <Avatar
+                              size={"large"}
+                              src={item.from.head_picture}
+                            ></Avatar>
                           }
-                          title={item.username}
-                          description={item.msg}
+                          title={item.to}
+                          description={"item.msg"}
                         ></List.Item.Meta>
                       </List.Item>
                     );
@@ -58,7 +45,7 @@ class Message extends React.Component {
               <Tabs.TabPane tab="群系统消息" key="群系统消息">
                 <List
                   bordered
-                  dataSource={friendMSG}
+                  dataSource={this.props.showGroupMSG}
                   renderItem={(item) => {
                     return (
                       <List.Item
@@ -69,10 +56,13 @@ class Message extends React.Component {
                       >
                         <List.Item.Meta
                           avatar={
-                            <Avatar size={"large"} src={item.avatar}></Avatar>
+                            <Avatar
+                              size={"large"}
+                              src={item.from.head_picture}
+                            ></Avatar>
                           }
-                          title={item.username}
-                          description={item.msg}
+                          title={item.to}
+                          description={"item.msg"}
                         ></List.Item.Meta>
                       </List.Item>
                     );
@@ -87,4 +77,14 @@ class Message extends React.Component {
   }
 }
 
-export default Message;
+function mapStateToProps(state) {
+  return {
+    ...state.message,
+  };
+}
+
+function mapDispatch(dispatch) {
+  return {};
+}
+
+export default connect(mapStateToProps, mapDispatch)(Message);

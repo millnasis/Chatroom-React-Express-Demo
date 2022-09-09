@@ -22,6 +22,8 @@ class LoginPage extends React.Component {
     const { username, password } = values;
     if (!this.state.isRegister) {
       this.props.send_login(username, password);
+    } else {
+      this.props.send_register(username, password);
     }
   };
 

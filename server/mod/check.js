@@ -43,7 +43,7 @@ exports.registerCheck = async (req, res, next) => {
     })
     .toArray();
   if (ret.length != 0) {
-    res.status(500).send("用户已存在");
+    res.status(500).send("userexist");
     return;
   }
   next();

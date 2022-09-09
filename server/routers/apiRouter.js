@@ -25,7 +25,7 @@ router.post(
   user.uploadImgWang
 );
 
-router.get("/userMessage", user.getMessage);
+// router.get("/userMessage", user.getMessage);
 
 router.post("/records", check.session, user.getRecording);
 

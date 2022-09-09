@@ -4,7 +4,8 @@ import { put, take, call } from "redux-saga/effects";
 import axios from "axios";
 
 // 从reducer中获取actionsType，同时包含返回数据的action生成器也由reducer提供
-import { actionsType, actions } from "../redux/info.js";
+import { actionsType, actions, totalUserMsg } from "../redux/info.js";
+import { actions as rootActions } from "../redux/root.js";
 
 export function* getTargetInfo() {
   while (true) {
@@ -15,6 +16,25 @@ export function* getTargetInfo() {
         yield put(
           actions.response_info(response.data.userInfo, response.data.identity)
         );
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+export function* sendToAddFriend() {
+  while (true) {
+    try {
+      const action = yield take(actionsType.SEND_TO_ADD_FRIEND);
+      const { username, targetname } = action;
+      const response = yield call(axios.post, "/api/message", {
+        messageType: totalUserMsg.ADD_FRIEND,
+        from: username,
+        to: targetname,
+      });
+      if (response && response.status === 200) {
+        yield put(rootActions.set_notification(0, "发送成功"));
       }
     } catch (error) {
       console.error(error);

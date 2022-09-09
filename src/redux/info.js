@@ -4,6 +4,11 @@ export const totalIdentity = {
   FRIEND: "FRIEND",
 };
 
+export const totalUserMsg = {
+  ADD_FRIEND: "addFriend",
+  DELETE_FRIEND: "deleteFriend",
+};
+
 // 初始状态
 const initialState = {
   targetInfo: {},
@@ -13,6 +18,7 @@ const initialState = {
 export const actionsType = {
   SEND_TO_GET_TARGET_INFO: "SEND_TO_GET_TARGET_INFO",
   RESPONSE_TARGET_INFO: "RESPONSE_TARGET_INFO",
+  SEND_TO_ADD_FRIEND: "SEND_TO_ADD_FRIEND",
 };
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
@@ -28,6 +34,13 @@ export const actions = {
       type: actionsType.RESPONSE_TARGET_INFO,
       data,
       identity,
+    };
+  },
+  add_friend(username, targetname) {
+    return {
+      type: actionsType.SEND_TO_ADD_FRIEND,
+      username,
+      targetname,
     };
   },
 };

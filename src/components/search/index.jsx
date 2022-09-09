@@ -4,6 +4,7 @@ import "./index.scss";
 import { actions } from "../../redux/search.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import { withUseNavigateHooksHOC } from "../../tools/withUseNavigateHooksHOC.jsx";
 const { get_group_search, get_user_search } = actions;
 
 function SingleCard(props) {
@@ -12,7 +13,12 @@ function SingleCard(props) {
     <div className="single-card">
       <Avatar src={props.avatar} className="card-avatar"></Avatar>
       <div className="info">
-        <div className="username">{props.username}</div>
+        <div
+          className="username"
+          onClick={() => props.navigate("/info/" + props.username)}
+        >
+          {props.username}
+        </div>
         <div className="msg">{props.msg}</div>
         <div className="action">
           <Button>+添加</Button>
@@ -52,6 +58,7 @@ class Search extends React.Component {
                             avatar={head_picture}
                             msg={`${sex} ${area.join("")}`}
                             username={username}
+                            navigate={this.props.navigate}
                           ></SingleCard>
                         </Card.Grid>
                       );
@@ -106,4 +113,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Search);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withUseNavigateHooksHOC(Search));

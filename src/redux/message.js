@@ -4,9 +4,16 @@ const initialState = {
   showGroupMSG: [],
 };
 
+export const totalResult = {
+  CONFIRM: "CONFIRM",
+  CONFIRM_BACK: "CONFIRM_BACK",
+  DENY: "DENY",
+};
+
 export const actionsType = {
   RESPONSE_USER_MESSAGE_ARRAY: "RESPONSE_USER_MESSAGE_ARRAY",
   SOCKET_ON_MSG: "SOCKET_ON_MSG",
+  SEND_TO_CONFIRM_MSG: "SEND_TO_CONFIRM_MSG",
 };
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
@@ -21,6 +28,15 @@ export const actions = {
     return {
       type: actionsType.SOCKET_ON_MSG,
       data,
+    };
+  },
+  confirm_msg(result, from, to, messageType) {
+    return {
+      type: actionsType.SEND_TO_CONFIRM_MSG,
+      result,
+      from,
+      to,
+      messageType,
     };
   },
 };

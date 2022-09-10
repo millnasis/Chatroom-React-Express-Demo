@@ -42,7 +42,7 @@ export function* sendLogout() {
     try {
       const response = yield call(axios.get, "/api/logout");
       if (response && response.status === 200) {
-        yield put(actions.get_user_info());
+        window.location.reload();
       }
     } catch (error) {
       console.log(error);

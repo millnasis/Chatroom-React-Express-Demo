@@ -51,11 +51,11 @@ exports.deleteFriend = async (req, res, next) => {
   }
   let deleteMessage = {
     messageType: "deleteFriend",
-    back: "back",
+    result: totalResult.CONFIRM_BACK,
     from: req.body.user_a,
     to: req.body.user_b,
-    head_picture:
-      "/img/src=http___bpic.588ku.com_element_pic_19_03_13_827aa73e189f5ac60d83e11b7f816206.jpg&refer=http___bpic.588ku.jpg",
+    read: false,
+    private: true,
   };
   let ret3 = await group.deleteOne({ room_id: room.room_id });
   let ret4 = await records.deleteOne({ room_id: room.room_id });
@@ -76,12 +76,27 @@ exports.deleteFriend = async (req, res, next) => {
   res.send(room);
 };
 
+const totalResult = {
+  CONFIRM: "CONFIRM",
+  CONFIRM_BACK: "CONFIRM_BACK",
+  DENY: "DENY",
+};
+
+const totalUserMsg = {
+  ADD_FRIEND: "addFriend",
+  DELETE_FRIEND: "deleteFriend",
+};
+
+const totalGrouprMsg = {
+  JOIN_GROUP: "joinGroup",
+};
+
 exports.handleMessage = async (req, res, next) => {
   let users = (await db).collection("users");
   let group = (await db).collection("group");
   let records = (await db).collection("records");
-  if (req.body.notice.messageType === "joinGroup") {
-    if (req.body.result === "confirm") {
+  if (req.body.notice.messageType === totalGrouprMsg.JOIN_GROUP) {
+    if (req.body.result === totalResult.CONFIRM) {
       let ret1 = await users.updateOne(
         { username: req.body.notice.from },
         {
@@ -103,7 +118,7 @@ exports.handleMessage = async (req, res, next) => {
         {
           $push: {
             message: {
-              back: "back",
+              result: totalResult.CONFIRM_BACK,
               messageType: req.body.notice.messageType,
               from: req.body.notice.from,
               to: req.body.notice.to,
@@ -137,8 +152,8 @@ exports.handleMessage = async (req, res, next) => {
       .toArray();
     req.session.user = ret[0];
     res.send(ret[0]);
-  } else if (req.body.notice.messageType === "addFriend") {
-    if (req.body.result === "confirm") {
+  } else if (req.body.notice.messageType === totalUserMsg.ADD_FRIEND) {
+    if (req.body.result === totalResult.CONFIRM) {
       let nowDate = new Date();
       let group_id =
         req.body.notice.from +
@@ -181,7 +196,9 @@ exports.handleMessage = async (req, res, next) => {
         {
           arrayFilters: [
             {
-              elem: req.body.notice,
+              "elem.from": req.body.notice.from,
+              "elem.to": req.body.notice.to,
+              "elem.messageType": req.body.notice.messageType,
             },
           ],
         }
@@ -191,7 +208,7 @@ exports.handleMessage = async (req, res, next) => {
         {
           $push: {
             message: {
-              back: "back",
+              result: totalResult.CONFIRM_BACK,
               messageType: req.body.notice.messageType,
               from: req.body.notice.to,
               to: req.body.notice.from,
@@ -215,7 +232,7 @@ exports.handleMessage = async (req, res, next) => {
         .toArray();
       req.session.user = ret[0];
       res.send("OK");
-    } else if (req.body.result === "confirmBack") {
+    } else if (req.body.result === totalResult.CONFIRM_BACK) {
       let ret3 = users.updateOne(
         { username: req.session.user.username },
         {
@@ -226,7 +243,9 @@ exports.handleMessage = async (req, res, next) => {
         {
           arrayFilters: [
             {
-              elem: req.body.notice,
+              "elem.from": req.body.notice.from,
+              "elem.to": req.body.notice.to,
+              "elem.messageType": req.body.notice.messageType,
             },
           ],
         }
@@ -237,7 +256,7 @@ exports.handleMessage = async (req, res, next) => {
       req.session.user = ret[0];
       res.send("OK");
     }
-  } else if (req.body.notice.messageType === "deleteFriend") {
+  } else if (req.body.notice.messageType === totalUserMsg.DELETE_FRIEND) {
     let ret3 = users.updateOne(
       { username: req.session.user.username },
       {
@@ -248,7 +267,9 @@ exports.handleMessage = async (req, res, next) => {
       {
         arrayFilters: [
           {
-            elem: req.body.notice,
+            "elem.from": req.body.notice.from,
+            "elem.to": req.body.notice.to,
+            "elem.messageType": req.body.notice.messageType,
           },
         ],
       }
@@ -263,14 +284,14 @@ exports.handleMessage = async (req, res, next) => {
 
 exports.sendMessage = async (req, res, next) => {
   let users = (await db).collection("users");
-  if (req.body.messageType === "joinGroup") {
+  if (req.body.messageType === totalGrouprMsg.JOIN_GROUP) {
     let ret = await users.updateOne(
       { username: req.body.owner },
       { $push: { message: { read: false, ...req.body, private: false } } }
     );
     console.log(ret);
     res.send("OK");
-  } else if (req.body.messageType === "addFriend") {
+  } else if (req.body.messageType === totalUserMsg.ADD_FRIEND) {
     let ret = await users.updateOne(
       { username: req.body.to },
       { $push: { message: { read: false, ...req.body, private: true } } }
@@ -740,7 +761,9 @@ exports.findUserByName = async (req, res, next) => {
   let identity;
   if (ret[0].username === req.session.user.username) {
     identity = totalIdentity.ME;
-  } else if (ret[0].friend.findIndex((v) => v === ret[0].username) !== -1) {
+  } else if (
+    ret[0].friend.findIndex((v) => v === req.session.user.username) !== -1
+  ) {
     identity = totalIdentity.FRIEND;
   } else {
     identity = totalIdentity.STRANGER;

@@ -5,6 +5,7 @@ import * as user from "./user.js";
 import * as info from "./info.js";
 import * as chatroom from "./chatroom.js";
 import * as search from "./search.js";
+import * as message from "./message.js";
 
 // 在根saga上，启用所有的监听函数
 export default function* rootSaga() {
@@ -14,8 +15,10 @@ export default function* rootSaga() {
   yield fork(user.sendLogout);
   yield fork(info.getTargetInfo);
   yield fork(info.sendToAddFriend);
+  yield fork(info.sendToDeleteFriend);
   yield fork(chatroom.sendToGetGroup);
   yield fork(chatroom.sendToGetRecord);
   yield fork(search.sendToSearchUser);
   yield fork(search.sendToSearchGroup);
+  yield fork(message.sendToConfirmMSG);
 }

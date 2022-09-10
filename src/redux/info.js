@@ -19,6 +19,7 @@ export const actionsType = {
   SEND_TO_GET_TARGET_INFO: "SEND_TO_GET_TARGET_INFO",
   RESPONSE_TARGET_INFO: "RESPONSE_TARGET_INFO",
   SEND_TO_ADD_FRIEND: "SEND_TO_ADD_FRIEND",
+  SEND_TO_DELETE_FRIEND: "SEND_TO_DELETE_FRIEND",
 };
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
@@ -39,6 +40,13 @@ export const actions = {
   add_friend(username, targetname) {
     return {
       type: actionsType.SEND_TO_ADD_FRIEND,
+      username,
+      targetname,
+    };
+  },
+  delete_friend(username, targetname) {
+    return {
+      type: actionsType.SEND_TO_DELETE_FRIEND,
       username,
       targetname,
     };

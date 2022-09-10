@@ -34,10 +34,11 @@ class CloseBtn {
   }
 }
 class SendBtn {
-  constructor(func) {
+  constructor(func, setHtml) {
     this.title = "发送";
     this.tag = "button";
     this.func = func;
+    this.setHtml = setHtml;
   }
   // 获取菜单执行时的 value ，用不到则返回空 字符串或 false
   getValue(editor) {
@@ -59,7 +60,7 @@ class SendBtn {
 
   // 点击菜单时触发的函数
   exec(editor, value) {
-    this.func(editor.getHtml());
+    this.func(editor.getHtml(), this.setHtml);
   }
 }
 
@@ -67,9 +68,6 @@ function EditorWarp(props) {
   // editor 实例
   const [editor, setEditor] = useState(null); // TS 语法
   // const [editor, setEditor] = useState(null)                   // JS 语法
-
-  // 编辑器内容
-  const [html, setHtml] = useState();
 
   // 模拟 ajax 请求，异步设置 html
 
@@ -147,14 +145,14 @@ function EditorWarp(props) {
       Boot.registerMenu({
         key: "my_send_window",
         factory() {
-          return new SendBtn((html) => {
+          return new SendBtn((html, setHtml) => {
             target.socket.emit("message", {
               username: userInfo.username,
               time: new Date(),
               content: html,
             });
             setHtml();
-          });
+          }, props.setHtml);
         },
       });
       props.register_menu_item();
@@ -186,10 +184,10 @@ function EditorWarp(props) {
         />
         <Editor
           defaultConfig={editorConfig}
-          value={html}
+          value={props.html}
           onCreated={setEditor}
           onChange={(editor) => {
-            return setHtml(editor.getHtml());
+            return props.setHtml(editor.getHtml());
           }}
           mode="default"
           style={{

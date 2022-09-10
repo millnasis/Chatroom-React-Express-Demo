@@ -41,3 +41,22 @@ export function* sendToAddFriend() {
     }
   }
 }
+export function* sendToDeleteFriend() {
+  while (true) {
+    try {
+      const action = yield take(actionsType.SEND_TO_DELETE_FRIEND);
+      const { username, targetname } = action;
+      const response = yield call(axios.put, "/api/deleteFriend", {
+        messageType: totalUserMsg.DELETE_FRIEND,
+        user_a: username,
+        user_b: targetname,
+      });
+      if (response && response.status === 200) {
+        yield put(rootActions.set_notification(0, "发送成功"));
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}

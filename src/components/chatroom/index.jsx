@@ -25,6 +25,9 @@ const { TabPane } = Tabs;
 class ChatRoom extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      html: "",
+    };
   }
 
   render() {
@@ -205,13 +208,15 @@ class ChatRoom extends React.Component {
                   userInfo={this.props.global.userInfo}
                   register_menu_item={this.props.register_menu_item}
                   register={this.props.register}
+                  html={this.state.html}
+                  setHtml={(value) => this.setState({ html: value })}
                 ></EditorWarp>
               </div>
             </div>
             <div className="info-area">
               <div className="info-area-card single">
                 <Image
-                  src="https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fi.qqkou.com%2Fi%2F1a4183908974x4246091424b26.jpg&refer=http%3A%2F%2Fi.qqkou.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1664507166&t=ae22e13986af45fa0f12d13d1da733b7"
+                  src={target.room_name.head_picture}
                   width={"50%"}
                 ></Image>
 

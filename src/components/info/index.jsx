@@ -20,7 +20,7 @@ import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { withUseParamsHooksHOC } from "../../tools/withUseParamsHooksHOC.jsx";
 import { LoadingOutlined, PlusOutlined, SkinOutlined } from "@ant-design/icons";
-const { get_info, add_friend } = actions;
+const { get_info, add_friend, delete_friend } = actions;
 import moment from "moment";
 import { momentFormat } from "../../../constant/index";
 
@@ -723,7 +723,16 @@ class Info extends React.Component {
                 )}
                 {this.props.identity === totalIdentity.FRIEND && (
                   <p>
-                    <Button type="primary" danger>
+                    <Button
+                      type="primary"
+                      danger
+                      onClick={() =>
+                        this.props.delete_friend(
+                          this.props.global.userInfo.username,
+                          this.props.targetInfo.username
+                        )
+                      }
+                    >
                       删除好友
                     </Button>
                   </p>
@@ -849,6 +858,7 @@ function mapDispatchToProps(dispatch) {
   return {
     get_info: bindActionCreators(get_info, dispatch),
     add_friend: bindActionCreators(add_friend, dispatch),
+    delete_friend: bindActionCreators(delete_friend, dispatch),
   };
 }
 

@@ -17,7 +17,7 @@ export function* sendToConfirmMSG() {
         notice: { from, to, messageType },
       });
       if (response && response.status === 200) {
-        yield put(rootActions.get_user_info(false, true));
+        yield put(rootActions.get_user_info(true, true));
       }
     } catch (error) {
       console.error(error);

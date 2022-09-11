@@ -16,6 +16,7 @@ import EditorWarp from "./EditorWarp.jsx";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { actions } from "../../redux/chatroom.js";
+import { withUseNavigateHooksHOC } from "../../tools/withUseNavigateHooksHOC.jsx";
 const { get_group, close_window, open_window, get_record, register_menu_item } =
   actions;
 
@@ -27,37 +28,61 @@ class ChatRoom extends React.Component {
     super(props);
     this.state = {
       html: "",
+      target: null,
     };
   }
 
-  render() {
-    console.log(this.props);
-    const { friendArray, groupArray, talkWindow } = this.props;
-    let target = null;
-    if (talkWindow.show) {
-      const findArr = [];
-      let obj;
-      if (talkWindow.private) {
-        obj = friendArray.find((v) => v.sort_name === talkWindow.target.sort);
-      } else {
-        obj = groupArray.find((v) => v.sort_name === talkWindow.target.sort);
-      }
-      if (Array.isArray(obj.arr)) {
-        obj.arr.forEach((e) => {
-          findArr.push(e);
-        });
-      }
-      target = findArr.find(
-        (value) => value.room_id === talkWindow.target.room_id
-      );
-      if (target.showMSG.length === 0) {
-        this.props.get_record(
-          talkWindow.private,
-          talkWindow.target.sort,
-          talkWindow.target.room_id
+  componentDidUpdate(prevProps) {
+    console.log(this.state.target);
+    if (
+      prevProps.talkWindow !== this.props.talkWindow ||
+      prevProps.friendArray !== this.props.friendArray ||
+      prevProps.groupArray !== this.props.groupArray
+    ) {
+      const { friendArray, groupArray, talkWindow } = this.props;
+      let target = null;
+      if (talkWindow.show) {
+        const findArr = [];
+        let obj;
+        if (talkWindow.private) {
+          obj = friendArray.find((v) => v.sort_name === talkWindow.target.sort);
+        } else {
+          obj = groupArray.find((v) => v.sort_name === talkWindow.target.sort);
+        }
+        if (Array.isArray(obj.arr)) {
+          obj.arr.forEach((e) => {
+            findArr.push(e);
+          });
+        }
+        target = findArr.find(
+          (value) => value.room_id === talkWindow.target.room_id
         );
+        // if (target.showMSG.length === 0) {
+        //   this.props.get_record(
+        //     talkWindow.private,
+        //     talkWindow.target.sort,
+        //     talkWindow.target.room_id,
+        //     3,
+        //     target.showMSG.length
+        //   );
+        // }
+        this.setState({ target });
+      } else {
+        this.setState({ target: null });
       }
     }
+  }
+
+  emitmessage = () => {
+    this.state.target.socket.emit("message", {
+      username: this.props.global.userInfo.username,
+      time: new Date(),
+      content: this.state.html,
+    });
+  };
+
+  render() {
+    const { friendArray, groupArray, talkWindow } = this.props;
     return (
       <div className="talk-room component">
         <div className="list">
@@ -134,12 +159,12 @@ class ChatRoom extends React.Component {
             </TabPane>
           </Tabs>
         </div>
-        {talkWindow.show && (
+        {talkWindow.show && this.state.target && (
           <div className="talk-window">
             <div className="talk-area">
               <div className="show">
                 <Card
-                  title="聊天名称"
+                  title={this.state.target.room_name.username}
                   className="show-card"
                   headStyle={{ textAlign: "center" }}
                   bodyStyle={{
@@ -150,7 +175,10 @@ class ChatRoom extends React.Component {
                   <div
                     className="loading-history"
                     onClick={() => {
-                      if (target.showMSG[0].sys) {
+                      if (
+                        this.state.target.showMSG.length > 0 &&
+                        this.state.target.showMSG[0].sys
+                      ) {
                         return;
                       }
                       this.props.get_record(
@@ -158,7 +186,7 @@ class ChatRoom extends React.Component {
                         talkWindow.target.sort,
                         talkWindow.target.room_id,
                         3,
-                        target.showMSG.length
+                        this.state.target.showMSG.length
                       );
                     }}
                   >
@@ -168,7 +196,7 @@ class ChatRoom extends React.Component {
                     <List
                       className="comment-list"
                       itemLayout="horizontal"
-                      dataSource={target.showMSG}
+                      dataSource={this.state.target.showMSG}
                       renderItem={(item) => {
                         const { time, content, sys } = item;
                         const { head_picture, username } = item.userObj;
@@ -204,11 +232,11 @@ class ChatRoom extends React.Component {
               <div className="input">
                 <EditorWarp
                   close_window={this.props.close_window}
-                  target={target}
-                  userInfo={this.props.global.userInfo}
+                  target={this.state.target}
                   register_menu_item={this.props.register_menu_item}
                   register={this.props.register}
                   html={this.state.html}
+                  emitmessage={this.emitmessage}
                   setHtml={(value) => this.setState({ html: value })}
                 ></EditorWarp>
               </div>
@@ -216,30 +244,45 @@ class ChatRoom extends React.Component {
             <div className="info-area">
               <div className="info-area-card single">
                 <Image
-                  src={target.room_name.head_picture}
+                  src={this.state.target.room_name.head_picture}
                   width={"50%"}
+                  preview={false}
+                  style={{ cursor: "pointer" }}
+                  onClick={() =>
+                    this.props.navigate(
+                      "/info/" + this.state.target.room_name.username
+                    )
+                  }
                 ></Image>
-
                 <h2>
-                  <strong>{target.room_name.username}</strong>
+                  <strong
+                    style={{ cursor: "pointer" }}
+                    onClick={() =>
+                      this.props.navigate(
+                        "/info/" + this.state.target.room_name.username
+                      )
+                    }
+                  >
+                    {this.state.target.room_name.username}
+                  </strong>
                 </h2>
                 <Divider></Divider>
                 <ul className="user-info-inner">
                   <li>
                     <label>性别：</label>
-                    {target.room_name.sex}
+                    {this.state.target.room_name.sex}
                   </li>
                   <li>
                     <label>生日：</label>
-                    {target.room_name.birthday}
+                    {this.state.target.room_name.birthday}
                   </li>
                   <li>
                     <label>所在城市：</label>
-                    {target.room_name.area}
+                    {this.state.target.room_name.area}
                   </li>
                   <li>
                     <label>个性签名：</label>
-                    {target.room_name.words}
+                    {this.state.target.room_name.words}
                   </li>
                 </ul>
               </div>
@@ -268,4 +311,7 @@ function mapDispatch(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatch)(ChatRoom);
+export default connect(
+  mapStateToProps,
+  mapDispatch
+)(withUseNavigateHooksHOC(ChatRoom));

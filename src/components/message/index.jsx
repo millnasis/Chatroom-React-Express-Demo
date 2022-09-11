@@ -5,6 +5,8 @@ import { connect } from "react-redux";
 import { actions, totalResult } from "../../redux/message.js";
 import { totalUserMsg } from "../../redux/info";
 import { bindActionCreators } from "redux";
+import moment from "moment";
+import { momentFormat } from "../../../constant";
 const { confirm_msg } = actions;
 
 class Message extends React.Component {
@@ -12,7 +14,7 @@ class Message extends React.Component {
     super(props);
   }
 
-  handleMSG = (result, from, to, messageType, read) => {
+  handleMSG = (result, from, to, messageType, read, date) => {
     let title = "",
       action = [],
       description = "";
@@ -38,8 +40,39 @@ class Message extends React.Component {
       } else if (messageType === totalUserMsg.DELETE_FRIEND) {
         title = `${from.username}已经将您删除好友`;
         if (!read) {
-          action.push(<Button>好的</Button>);
+          action.push(
+            <Button
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.CONFIRM_BACK,
+                  from.username,
+                  to,
+                  messageType
+                )
+              }
+            >
+              好的
+            </Button>
+          );
         }
+      }
+    } else if (result === totalResult.DENY_BACK) {
+      title = `${from.username}拒绝了您的好友请求`;
+      if (!read) {
+        action.push(
+          <Button
+            onClick={() =>
+              this.props.confirm_msg(
+                totalResult.DENY_BACK,
+                from.username,
+                to,
+                messageType
+              )
+            }
+          >
+            好的
+          </Button>
+        );
       }
     } else {
       if (messageType === totalUserMsg.ADD_FRIEND) {
@@ -75,7 +108,9 @@ class Message extends React.Component {
         }
       }
     }
-    description = `${from.sex} ${from.area.join("")}`;
+    description = `${from.sex} ${from.area.join("")} ${moment(
+      new Date(date)
+    ).format(momentFormat.toSec)}`;
     return { title, action, description };
   };
 
@@ -95,7 +130,8 @@ class Message extends React.Component {
                       item.from,
                       item.to,
                       item.messageType,
-                      item.read
+                      item.read,
+                      item.date
                     );
                     return (
                       <List.Item

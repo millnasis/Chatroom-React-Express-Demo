@@ -23,7 +23,9 @@ exports.sendMessageCheck = async (req, res, next) => {
     if (
       element.messageType === req.body.messageType &&
       element.from === req.body.from &&
-      element.to === req.body.to
+      element.to === req.body.to &&
+      !element.result &&
+      !element.read
     ) {
       find = true;
     }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Avatar, Layout, Menu, notification } from "antd";
+import { Avatar, Badge, Layout, Menu, notification } from "antd";
 import { Route, Routes, Link } from "react-router-dom";
 import "./app.scss";
 import ChatRoom from "./components/chatroom/index.jsx";
@@ -18,33 +18,6 @@ import Logout from "./components/logout/index.jsx";
 const { get_user_info, clear_notification } = actions;
 
 const { Content, Footer, Header } = Layout;
-
-const menuItems = [
-  {
-    label: "聊天室",
-    key: "main",
-  },
-  {
-    label: "通知",
-    key: "msg",
-  },
-  {
-    label: "添加好友",
-    key: "search",
-  },
-  {
-    label: "个人信息",
-    key: "info",
-  },
-  {
-    label: "新建房间",
-    key: "create-room",
-  },
-  {
-    label: "退出登陆",
-    key: "logout",
-  },
-];
 
 const loginItem = [
   {
@@ -108,7 +81,42 @@ class App extends React.Component {
   }
 
   render() {
-    const { head_picture, username } = this.props.userInfo;
+    let { head_picture, username, message } = this.props.userInfo;
+    if (!Array.isArray(message)) {
+      message = [];
+    }
+    let count = 0;
+    message.forEach((e) => {
+      if (!e.read) {
+        count++;
+      }
+    });
+    const menuItems = [
+      {
+        label: "聊天室",
+        key: "main",
+      },
+      {
+        label: (
+          <Badge count={count} offset={[8, -7]}>
+            <span style={{ color: "white" }}>通知</span>
+          </Badge>
+        ),
+        key: "msg",
+      },
+      {
+        label: "添加好友",
+        key: "search",
+      },
+      {
+        label: "新建房间",
+        key: "create-room",
+      },
+      {
+        label: "退出登陆",
+        key: "logout",
+      },
+    ];
     return (
       <Layout>
         <Header>

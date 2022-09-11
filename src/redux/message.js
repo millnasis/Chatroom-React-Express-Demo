@@ -8,6 +8,7 @@ export const totalResult = {
   CONFIRM: "CONFIRM",
   CONFIRM_BACK: "CONFIRM_BACK",
   DENY: "DENY",
+  DENY_BACK: "DENY_BACK",
 };
 
 export const actionsType = {
@@ -55,8 +56,8 @@ export function reducer(state = initialState, action) {
       });
       return {
         ...state,
-        showUserMSG: userarr,
-        showGroupMSG: grouparr,
+        showUserMSG: userarr.reverse(),
+        showGroupMSG: grouparr.reverse(),
       };
     }
     case actionsType.SOCKET_ON_MSG: {

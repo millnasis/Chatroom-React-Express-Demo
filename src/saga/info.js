@@ -53,7 +53,7 @@ export function* sendToDeleteFriend() {
       });
       if (response && response.status === 200) {
         yield put(rootActions.set_notification(0, "发送成功"));
-        window.location.reload();
+        yield put(rootActions.get_user_info(true, true));
       }
     } catch (error) {
       console.error(error);

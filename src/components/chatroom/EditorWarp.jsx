@@ -146,11 +146,7 @@ function EditorWarp(props) {
         key: "my_send_window",
         factory() {
           return new SendBtn((html, setHtml) => {
-            target.socket.emit("message", {
-              username: userInfo.username,
-              time: new Date(),
-              content: html,
-            });
+            props.emitmessage();
             setHtml();
           }, props.setHtml);
         },
@@ -163,8 +159,7 @@ function EditorWarp(props) {
       setEditor(null);
     };
   }, [editor]);
-
-  const { target, userInfo } = props;
+  
   return (
     <>
       <div

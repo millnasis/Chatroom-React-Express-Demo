@@ -151,6 +151,14 @@ export function reducer(state = initialState, action) {
         groupArray: handleGroupArray(action.data.groupArray),
         friendArray: handleGroupArray(action.data.friendArray),
         initial: false,
+        talkWindow: {
+          show: false,
+          private: null,
+          target: {
+            sort: null,
+            room_id: null,
+          },
+        },
       };
     }
     case actionsType.OPEN_TALK_WINDOW: {

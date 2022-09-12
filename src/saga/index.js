@@ -18,6 +18,7 @@ export default function* rootSaga() {
   yield fork(info.sendToDeleteFriend);
   yield fork(chatroom.sendToGetGroup);
   yield fork(chatroom.sendToGetRecord);
+  yield fork(chatroom.sendToChangeSort);
   yield fork(search.sendToSearchUser);
   yield fork(search.sendToSearchGroup);
   yield fork(message.sendToConfirmMSG);

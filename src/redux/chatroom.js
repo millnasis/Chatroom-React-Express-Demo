@@ -31,6 +31,7 @@ const initialState = {
     },
   },
   register: false,
+  registerRoomRecord: new Set(),
 };
 
 export const actionsType = {
@@ -45,6 +46,7 @@ export const actionsType = {
   SEND_TO_GET_RECORD: "SEND_TO_GET_RECORD",
   RESPONSE_RECORD: "RESPONSE_RECORD",
   REGISTER_MENU_ITEM: "REGISTER_MENU_ITEM",
+  SEND_TO_CHANGE_SORT: "SEND_TO_CHANGE_SORT",
 };
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
@@ -131,6 +133,13 @@ export const actions = {
   register_menu_item() {
     return {
       type: actionsType.REGISTER_MENU_ITEM,
+    };
+  },
+  change_sort(group_id, new_sort) {
+    return {
+      type: actionsType.SEND_TO_CHANGE_SORT,
+      group_id,
+      new_sort,
     };
   },
 };

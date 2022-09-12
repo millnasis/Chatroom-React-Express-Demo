@@ -322,8 +322,8 @@ exports.handleMessage = async (req, res, next) => {
           {
             "elem.from": req.body.notice.from,
             "elem.to": req.body.notice.to,
-              "elem.result": req.body.result,
-              "elem.messageType": req.body.notice.messageType,
+            "elem.result": req.body.result,
+            "elem.messageType": req.body.notice.messageType,
           },
         ],
       }
@@ -666,6 +666,32 @@ exports.findGroupByUsername = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("服务端出错");
+  }
+};
+
+exports.changeSort = async (req, res, next) => {
+  try {
+    let users = (await db).collection("users");
+    const { group_id, new_sort } = req.body;
+    const ret = await users.updateOne(
+      { username: req.session.user.username },
+      {
+        $set: {
+          "group.$[elem].sort": new_sort,
+        },
+      },
+      {
+        arrayFilters: [
+          {
+            "elem.group_id": group_id,
+          },
+        ],
+      }
+    );
+    res.send("OK");
+  } catch (error) {
+    res.status(500).send("服务端出错");
+    console.error(error);
   }
 };
 

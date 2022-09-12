@@ -45,6 +45,8 @@ router.get("/group", check.session, userCtrl.findGroupByUsername);
 
 router.put("/group/:groupid", check.session, userCtrl.updateGroupInfo);
 
+router.put("/sort", check.session, userCtrl.changeSort);
+
 router.delete(
   "/group/:groupid",
 

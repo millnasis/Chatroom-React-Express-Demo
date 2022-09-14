@@ -4,7 +4,7 @@ import { put, take, call } from "redux-saga/effects";
 import axios from "axios";
 
 // 从reducer中获取actionsType，同时包含返回数据的action生成器也由reducer提供
-import { actionsType, actions, totalResult } from "../redux/message.js";
+import { actionsType, actions } from "../redux/message.js";
 import { actions as rootActions } from "../redux/root.js";
 
 export function* sendToConfirmMSG() {

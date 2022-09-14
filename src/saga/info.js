@@ -4,8 +4,9 @@ import { put, take, call } from "redux-saga/effects";
 import axios from "axios";
 
 // 从reducer中获取actionsType，同时包含返回数据的action生成器也由reducer提供
-import { actionsType, actions, totalUserMsg } from "../redux/info.js";
+import { actionsType, actions } from "../redux/info.js";
 import { actions as rootActions } from "../redux/root.js";
+import { totalUserMsg } from "../../constant/index.js";
 
 export function* getTargetInfo() {
   while (true) {

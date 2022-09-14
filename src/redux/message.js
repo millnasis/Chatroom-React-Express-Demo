@@ -4,13 +4,6 @@ const initialState = {
   showGroupMSG: [],
 };
 
-export const totalResult = {
-  CONFIRM: "CONFIRM",
-  CONFIRM_BACK: "CONFIRM_BACK",
-  DENY: "DENY",
-  DENY_BACK: "DENY_BACK",
-};
-
 export const actionsType = {
   RESPONSE_USER_MESSAGE_ARRAY: "RESPONSE_USER_MESSAGE_ARRAY",
   SOCKET_ON_MSG: "SOCKET_ON_MSG",

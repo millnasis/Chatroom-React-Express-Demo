@@ -1,5 +1,7 @@
 const db = require("./index");
 const render = require("../tools/render");
+const constant = require("../../constant/index");
+const { totalGrouprMsg, totalResult, totalUserMsg, totalIdentity } = constant;
 // 读取内嵌数组的内容，并可以分页
 /*db.group.aggregate([
   {$unwind:"$recording"},
@@ -97,22 +99,6 @@ exports.deleteFriend = async (req, res, next) => {
   }
 
   res.send(room);
-};
-
-const totalResult = {
-  CONFIRM: "CONFIRM",
-  CONFIRM_BACK: "CONFIRM_BACK",
-  DENY: "DENY",
-  DENY_BACK: "DENY_BACK",
-};
-
-const totalUserMsg = {
-  ADD_FRIEND: "addFriend",
-  DELETE_FRIEND: "deleteFriend",
-};
-
-const totalGrouprMsg = {
-  JOIN_GROUP: "joinGroup",
 };
 
 exports.handleMessage = async (req, res, next) => {
@@ -388,36 +374,64 @@ exports.newRoomHandle = async (req, res, next) => {
   let group = (await db).collection("group");
   let users = (await db).collection("users");
   let records = (await db).collection("records");
-  let now = Date.now();
-  let ret1 = await group.insertOne({
-    head_picture: "/img/logo.png",
-    room_name: req.body.groupName,
+  const { groupName, owner, inviteList, avatar } = req.body;
+  let now = new Date();
+  const room_id = owner + "_" + now.getTime();
+  await group.insertOne({
+    head_picture: avatar,
+    room_name: groupName,
     private: false,
-    room_id: req.body.owner + "_" + now.toString(),
-    owner: req.body.owner,
+    room_id,
+    owner: owner,
     foundtime: now,
-    member: [req.body.owner],
+    member: [owner],
   });
-  let ret2 = await records.insertOne({
-    room_id: req.body.owner + "_" + now.toString(),
+  await records.insertOne({
+    room_id,
     recording: [],
   });
-  console.log(ret1);
-  let ret3 = await users.updateOne(
-    { username: req.body.owner },
+  // console.log(ret1);
+  await users.updateOne(
+    { username: owner },
     // mongodb内嵌数组的添加写法如下
     {
       $push: {
         group: {
-          group_id: req.body.owner + "_" + now.toString(),
+          group_id: room_id,
           sort: "未分组",
           private: false,
         },
       },
     }
   );
-  let ret = await users.find({ username: req.body.owner }).toArray();
-  req.session.user = ret[0];
+  console.log(inviteList);
+  if (Array.isArray(inviteList) && inviteList.length > 0) {
+    await Promise.all(
+      inviteList.map(async (v) => {
+        const ret = await users.updateOne(
+          {
+            username: v,
+          },
+          {
+            $push: {
+              message: {
+                read: false,
+                messageType: totalGrouprMsg.INVITE_GROUP,
+                from: req.session.user.username,
+                to: v,
+                room_name: groupName,
+                private: false,
+                date: new Date(),
+              },
+            },
+          }
+        );
+        return ret;
+      })
+    );
+  }
+  // let ret = await users.find({ username: req.body.owner }).toArray();
+  // req.session.user = ret[0];
   res.send("创建成功");
 };
 
@@ -838,12 +852,6 @@ exports.findMyUser = async (req, res, next) => {
     res.status(404).send("userexist");
     // 返回错误的状态码会让客户端的ajax报错
   }
-};
-
-const totalIdentity = {
-  ME: "MYSELFT",
-  STRANGER: "STRANGER",
-  FRIEND: "FRIEND",
 };
 
 exports.findUserByName = async (req, res, next) => {

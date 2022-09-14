@@ -15,7 +15,7 @@ import {
 } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 
-import { actions, totalIdentity } from "../../redux/info.js";
+import { actions } from "../../redux/info.js";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { withUseParamsHooksHOC } from "../../tools/withUseParamsHooksHOC.jsx";
@@ -23,6 +23,7 @@ import { LoadingOutlined, PlusOutlined, SkinOutlined } from "@ant-design/icons";
 const { get_info, add_friend, delete_friend } = actions;
 import moment from "moment";
 import { momentFormat } from "../../../constant/index";
+import { totalIdentity } from "../../../constant/index.js";
 
 import axios from "axios";
 

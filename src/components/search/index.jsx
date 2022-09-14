@@ -10,15 +10,13 @@ const { get_group_search, get_user_search } = actions;
 function SingleCard(props) {
   console.log(props);
   return (
-    <div className="single-card">
+    <div
+      className="single-card"
+      onClick={() => props.navigate("/info/" + props.username)}
+    >
       <Avatar src={props.avatar} className="card-avatar"></Avatar>
       <div className="info">
-        <div
-          className="username"
-          onClick={() => props.navigate("/info/" + props.username)}
-        >
-          {props.username}
-        </div>
+        <div className="username">{props.username}</div>
         <div className="msg">{props.msg}</div>
         <div className="action">
           <Button>+添加</Button>

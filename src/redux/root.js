@@ -5,6 +5,7 @@ import { reducer as infoReducer } from "./info.js";
 import { reducer as chatroomReducer } from "./chatroom.js";
 import { reducer as searchReducer } from "./search.js";
 import { reducer as messageReducer } from "./message.js";
+import { reducer as createroomReducer } from "./createroom.js";
 
 // 初始状态
 const initialState = {
@@ -171,4 +172,5 @@ export default combineReducers({
   chatroom: chatroomReducer,
   search: searchReducer,
   message: messageReducer,
+  createroom: createroomReducer,
 });

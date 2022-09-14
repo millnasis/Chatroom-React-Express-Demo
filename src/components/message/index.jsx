@@ -2,10 +2,14 @@ import React from "react";
 import { Avatar, Button, Card, List, Tabs } from "antd";
 import "./index.scss";
 import { connect } from "react-redux";
-import { actions, totalResult } from "../../redux/message.js";
-import { totalUserMsg } from "../../redux/info";
+import { actions } from "../../redux/message.js";
 import { bindActionCreators } from "redux";
 import moment from "moment";
+import {
+  totalGrouprMsg,
+  totalResult,
+  totalUserMsg,
+} from "../../../constant/index.js";
 import { momentFormat } from "../../../constant";
 const { confirm_msg } = actions;
 
@@ -14,7 +18,8 @@ class Message extends React.Component {
     super(props);
   }
 
-  handleMSG = (result, from, to, messageType, read, date) => {
+  handleMSG = (item) => {
+    const { result, from, to, messageType, read, date, room_name } = item;
     let title = "",
       action = [],
       description = "";
@@ -106,11 +111,47 @@ class Message extends React.Component {
             </Button>,
           ];
         }
+      } else if (messageType === totalGrouprMsg.INVITE_GROUP) {
+        title = `${from.username}邀请您加入群聊${room_name}`;
+        if (!read) {
+          action = [
+            <Button
+              type="primary"
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.CONFIRM,
+                  from.username,
+                  to,
+                  messageType
+                )
+              }
+            >
+              同意
+            </Button>,
+            <Button
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.DENY,
+                  from.username,
+                  to,
+                  messageType
+                )
+              }
+            >
+              拒绝
+            </Button>,
+          ];
+        }
       }
     }
-    description = `${from.sex} ${from.area.join("")} ${moment(
-      new Date(date)
-    ).format(momentFormat.toSec)}`;
+    if (item.private) {
+      description = `${from.sex} ${from.area.join("")} ${moment(
+        new Date(date)
+      ).format(momentFormat.toSec)}`;
+    } else {
+      description = `${moment(new Date(date)).format(momentFormat.toSec)}`;
+    }
+
     return { title, action, description };
   };
 
@@ -125,14 +166,7 @@ class Message extends React.Component {
                   bordered
                   dataSource={this.props.showUserMSG}
                   renderItem={(item) => {
-                    const { title, action, description } = this.handleMSG(
-                      item.result,
-                      item.from,
-                      item.to,
-                      item.messageType,
-                      item.read,
-                      item.date
-                    );
+                    const { title, action, description } = this.handleMSG(item);
                     return (
                       <List.Item
                         actions={action}
@@ -158,12 +192,11 @@ class Message extends React.Component {
                   bordered
                   dataSource={this.props.showGroupMSG}
                   renderItem={(item) => {
+                    const { title, action, description } = this.handleMSG(item);
                     return (
                       <List.Item
-                        actions={[
-                          <Button type="primary">同意</Button>,
-                          <Button>忽略</Button>,
-                        ]}
+                        actions={action}
+                        className={item.read && "msg-checked"}
                       >
                         <List.Item.Meta
                           avatar={
@@ -172,8 +205,8 @@ class Message extends React.Component {
                               src={item.from.head_picture}
                             ></Avatar>
                           }
-                          title={item.to}
-                          description={"item.msg"}
+                          title={title}
+                          description={description}
                         ></List.Item.Meta>
                       </List.Item>
                     );

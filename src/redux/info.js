@@ -1,13 +1,3 @@
-export const totalIdentity = {
-  ME: "MYSELFT",
-  STRANGER: "STRANGER",
-  FRIEND: "FRIEND",
-};
-
-export const totalUserMsg = {
-  ADD_FRIEND: "addFriend",
-  DELETE_FRIEND: "deleteFriend",
-};
 
 // 初始状态
 const initialState = {

@@ -28,12 +28,43 @@ module.exports = (io) => {
     });
 
     socket.on("message", async (data) => {
-      if (roomName) {
-        groupTalk.to(roomName).emit("message", data);
-        await records.updateOne(
-          { room_id: roomName },
-          { $push: { recording: data } }
-        );
+      try {
+        const users = (await db).collection("users");
+        if (roomName) {
+          await records.updateOne(
+            { room_id: roomName },
+            {
+              $push: {
+                recording: {
+                  ...data,
+                  time: new Date(data.time),
+                },
+              },
+            }
+          );
+          const userObj = await users
+            .aggregate([
+              {
+                $match: { username: data.username },
+              },
+              {
+                $project: {
+                  group: 0,
+                  message: 0,
+                  friend: 0,
+                },
+              },
+            ])
+            .toArray();
+          if (userObj.length === 0) {
+            throw Error;
+          }
+          groupTalk
+            .to(roomName)
+            .emit("message", { ...data, userObj: userObj[0] });
+        }
+      } catch (error) {
+        console.error(error);
       }
     });
 

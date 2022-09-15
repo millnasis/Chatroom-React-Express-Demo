@@ -85,6 +85,23 @@
             }
           }
         }
+        &.group {
+          display: flex;
+          padding-top: 5vh;
+          flex-direction: column;
+          align-items: center;
+          .group-member-list {
+            width: 100%;
+            flex: 1;
+            overflow-y: auto;
+            .group-single-member {
+              transition: .3s all ease-in-out;
+              &:hover {
+                background-color: darken($color: #fff, $amount: 10%);
+              }
+            }
+          }
+        }
       }
     }
   }

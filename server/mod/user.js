@@ -314,8 +314,134 @@ exports.handleMessage = async (req, res, next) => {
         ],
       }
     );
-
     res.send("OK");
+  } else if (req.body.notice.messageType === totalGrouprMsg.INVITE_GROUP) {
+    if (req.body.result === totalResult.CONFIRM) {
+      const query = await group
+        .find({
+          private: false,
+          owner: req.body.notice.from,
+          room_name: req.body.notice.room_name,
+        })
+        .toArray();
+      if (query.length === 0) {
+        res.status(500).send("房间未找到");
+        return;
+      }
+      const room_id = query[0].room_id;
+      console.log(req.body, "fuck");
+      await users.updateOne(
+        { username: req.body.notice.to },
+        {
+          $set: {
+            "message.$[elem].read": true,
+          },
+          $push: {
+            group: {
+              sort: "未分组",
+              group_id: room_id,
+              private: false,
+            },
+          },
+        },
+        {
+          arrayFilters: [
+            {
+              "elem.from": req.body.notice.from,
+              "elem.to": req.body.notice.to,
+              "elem.messageType": req.body.notice.messageType,
+            },
+          ],
+        }
+      );
+      await group.updateOne(
+        {
+          room_id,
+        },
+        {
+          $push: {
+            member: req.body.notice.to,
+          },
+        }
+      );
+      await users.updateOne(
+        {
+          username: req.body.notice.from,
+        },
+        {
+          $push: {
+            message: {
+              result: totalResult.CONFIRM_BACK,
+              messageType: req.body.notice.messageType,
+              from: req.body.notice.to,
+              to: req.body.notice.from,
+              room_name: req.body.notice.room_name,
+              private: false,
+              read: false,
+              date: new Date(),
+            },
+          },
+        }
+      );
+      res.send("OK");
+    } else if (req.body.result === totalResult.DENY) {
+      await users.updateOne(
+        { username: req.body.notice.to },
+        { $set: { "message.$[elem].read": true } },
+        {
+          arrayFilters: [
+            {
+              "elem.from": req.body.notice.from,
+              "elem.to": req.body.notice.to,
+              "elem.messageType": req.body.notice.messageType,
+            },
+          ],
+        }
+      );
+      await users.updateOne(
+        {
+          username: req.body.notice.from,
+        },
+        {
+          $push: {
+            message: {
+              result: totalResult.DENY_BACK,
+              messageType: req.body.notice.messageType,
+              from: req.body.notice.to,
+              to: req.body.notice.from,
+              room_name: req.body.notice.room_name,
+              private: false,
+              read: false,
+              date: new Date(),
+            },
+          },
+        }
+      );
+      res.send("OK");
+    } else if (
+      req.body.result === totalResult.CONFIRM_BACK ||
+      req.body.result === totalResult.DENY_BACK
+    ) {
+      await users.updateOne(
+        { username: req.session.user.username },
+        {
+          $set: {
+            "message.$[elem].read": true,
+          },
+        },
+        {
+          arrayFilters: [
+            {
+              "elem.from": req.body.notice.from,
+              "elem.to": req.body.notice.to,
+              "elem.result": req.body.result,
+              "elem.messageType": req.body.notice.messageType,
+            },
+          ],
+        }
+      );
+      res.send("OK");
+    }
   }
 };
 
@@ -656,6 +782,14 @@ exports.findGroupByUsername = async (req, res, next) => {
         {
           $unwind: "$info",
         },
+        {
+          $lookup: {
+            from: "users",
+            localField: "info.member",
+            foreignField: "username",
+            as: "info.member",
+          },
+        },
       ])
       .toArray();
     const ret = ret1.concat(ret2);
@@ -674,6 +808,12 @@ exports.findGroupByUsername = async (req, res, next) => {
         return {
           ...v.group,
           ...v.info,
+          member: v.info.member.map((v) => {
+            delete v.group;
+            delete v.message;
+            delete v.friend;
+            return v;
+          }),
         };
       })
     );

@@ -185,6 +185,7 @@ class ChatRoom extends React.Component {
                                     item.sort,
                                     item.room_id
                                   );
+                                  this.setState({ target: null });
                                 }}
                               >
                                 <List.Item.Meta
@@ -223,12 +224,15 @@ class ChatRoom extends React.Component {
                                   item.sort,
                                   item.room_id
                                 );
+                                this.setState({ target: null });
                               }}
                             >
                               <List.Item.Meta
-                                avatar={<Avatar></Avatar>}
+                                avatar={
+                                  <Avatar src={item.head_picture}></Avatar>
+                                }
                                 title={item.room_name}
-                                description={"这里是个性签名"}
+                                description={`共${item.member.length}名群员`}
                               ></List.Item.Meta>
                             </List.Item>
                           );
@@ -324,50 +328,88 @@ class ChatRoom extends React.Component {
               </div>
             </div>
             <div className="info-area">
-              <div className="info-area-card single">
-                <Image
-                  src={this.state.target.room_name.head_picture}
-                  width={"50%"}
-                  preview={false}
-                  style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    this.props.navigate(
-                      "/info/" + this.state.target.room_name.username
-                    )
-                  }
-                ></Image>
-                <h2>
-                  <strong
+              {talkWindow.private ? (
+                <div className="info-area-card single">
+                  <Image
+                    src={this.state.target.room_name.head_picture}
+                    width={"50%"}
+                    preview={false}
                     style={{ cursor: "pointer" }}
                     onClick={() =>
                       this.props.navigate(
                         "/info/" + this.state.target.room_name.username
                       )
                     }
-                  >
-                    {this.state.target.room_name.username}
-                  </strong>
-                </h2>
-                <Divider></Divider>
-                <ul className="user-info-inner">
-                  <li>
-                    <label>性别：</label>
-                    {this.state.target.room_name.sex}
-                  </li>
-                  <li>
-                    <label>生日：</label>
-                    {this.state.target.room_name.birthday}
-                  </li>
-                  <li>
-                    <label>所在城市：</label>
-                    {this.state.target.room_name.area}
-                  </li>
-                  <li>
-                    <label>个性签名：</label>
-                    {this.state.target.room_name.words}
-                  </li>
-                </ul>
-              </div>
+                  ></Image>
+                  <h2>
+                    <strong
+                      style={{ cursor: "pointer" }}
+                      onClick={() =>
+                        this.props.navigate(
+                          "/info/" + this.state.target.room_name.username
+                        )
+                      }
+                    >
+                      {this.state.target.room_name.username}
+                    </strong>
+                  </h2>
+                  <Divider></Divider>
+                  <ul className="user-info-inner">
+                    <li>
+                      <label>性别：</label>
+                      {this.state.target.room_name.sex}
+                    </li>
+                    <li>
+                      <label>生日：</label>
+                      {this.state.target.room_name.birthday}
+                    </li>
+                    <li>
+                      <label>所在城市：</label>
+                      {this.state.target.room_name.area}
+                    </li>
+                    <li>
+                      <label>个性签名：</label>
+                      {this.state.target.room_name.words}
+                    </li>
+                  </ul>
+                </div>
+              ) : (
+                <div className="info-area-card group">
+                  <Image
+                    src={this.state.target.head_picture}
+                    width={"50%"}
+                    preview={false}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => null}
+                  ></Image>
+                  <h2>
+                    <strong style={{ cursor: "pointer" }} onClick={() => null}>
+                      {this.state.target.room_name}
+                    </strong>
+                  </h2>
+                  <Divider></Divider>
+                  <Card className="group-member-list" title={`群成员（${50}）`}>
+                    <List
+                      dataSource={this.state.target.member}
+                      renderItem={(item) => {
+                        return (
+                          <List.Item className="group-single-member">
+                            <List.Item.Meta
+                              avatar={
+                                <Avatar
+                                  size={"small"}
+                                  src={item.head_picture}
+                                ></Avatar>
+                              }
+                              title={item.username}
+                            ></List.Item.Meta>
+                          </List.Item>
+                        );
+                      }}
+                    ></List>
+                  </Card>
+                </div>
+              )}
             </div>
           </div>
         )}

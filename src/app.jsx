@@ -14,6 +14,7 @@ import { connect } from "react-redux";
 import { actions } from "./redux/root";
 import { bindActionCreators } from "redux";
 import Logout from "./components/logout/index.jsx";
+import GroupInfo from "./components/groupInfo/index.jsx";
 
 const { get_user_info, clear_notification } = actions;
 
@@ -146,6 +147,7 @@ class App extends React.Component {
             <Route path="/info/:username" element={<Info></Info>}></Route>
             <Route path="/login" element={<LoginPage></LoginPage>}></Route>
             <Route path="/logout" element={<Logout></Logout>}></Route>
+            <Route path="/group" element={<GroupInfo></GroupInfo>}></Route>
             <Route
               path="/create-room"
               element={<CreateRoom></CreateRoom>}

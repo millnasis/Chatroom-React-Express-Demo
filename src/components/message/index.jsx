@@ -1,5 +1,5 @@
 import React from "react";
-import { Avatar, Button, Card, List, Tabs } from "antd";
+import { Avatar, Badge, Button, Card, List, Tabs } from "antd";
 import "./index.scss";
 import { connect } from "react-redux";
 import { actions } from "../../redux/message.js";
@@ -60,24 +60,62 @@ class Message extends React.Component {
             </Button>
           );
         }
+      } else if (messageType === totalGrouprMsg.INVITE_GROUP) {
+        title = `${from.username}已经同意加入群聊${room_name}`;
+        if (!read) {
+          action.push(
+            <Button
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.CONFIRM_BACK,
+                  from.username,
+                  to,
+                  messageType
+                )
+              }
+            >
+              好的
+            </Button>
+          );
+        }
       }
     } else if (result === totalResult.DENY_BACK) {
-      title = `${from.username}拒绝了您的好友请求`;
-      if (!read) {
-        action.push(
-          <Button
-            onClick={() =>
-              this.props.confirm_msg(
-                totalResult.DENY_BACK,
-                from.username,
-                to,
-                messageType
-              )
-            }
-          >
-            好的
-          </Button>
-        );
+      if (messageType === totalUserMsg.ADD_FRIEND) {
+        title = `${from.username}拒绝了您的好友请求`;
+        if (!read) {
+          action.push(
+            <Button
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.DENY_BACK,
+                  from.username,
+                  to,
+                  messageType
+                )
+              }
+            >
+              好的
+            </Button>
+          );
+        }
+      } else if (messageType === totalGrouprMsg.INVITE_GROUP) {
+        title = `${from.username}拒绝加入群聊${room_name}`;
+        if (!read) {
+          action.push(
+            <Button
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.DENY_BACK,
+                  from.username,
+                  to,
+                  messageType
+                )
+              }
+            >
+              好的
+            </Button>
+          );
+        }
       }
     } else {
       if (messageType === totalUserMsg.ADD_FRIEND) {
@@ -122,7 +160,8 @@ class Message extends React.Component {
                   totalResult.CONFIRM,
                   from.username,
                   to,
-                  messageType
+                  messageType,
+                  room_name
                 )
               }
             >
@@ -134,7 +173,8 @@ class Message extends React.Component {
                   totalResult.DENY,
                   from.username,
                   to,
-                  messageType
+                  messageType,
+                  room_name
                 )
               }
             >
@@ -156,15 +196,33 @@ class Message extends React.Component {
   };
 
   render() {
+    const { showGroupMSG, showUserMSG } = this.props;
+    let groupMSGCount = 0,
+      userMSGCount = 0;
+    showGroupMSG.forEach((e) => {
+      if (!e.read) {
+        groupMSGCount++;
+      }
+    });
+    showUserMSG.forEach((e) => {
+      if (!e.read) {
+        userMSGCount++;
+      }
+    });
     return (
       <div className="component message">
         <div className="msg-body">
           <Card title="验证消息" headStyle={{ fontSize: "5vmin" }}>
             <Tabs type="card" size="large">
-              <Tabs.TabPane tab="好友验证" key="好友验证">
+              <Tabs.TabPane
+                tab=<Badge count={userMSGCount} offset={[5, -7]} size={"small"}>
+                  好友验证
+                </Badge>
+                key="好友验证"
+              >
                 <List
                   bordered
-                  dataSource={this.props.showUserMSG}
+                  dataSource={showUserMSG}
                   renderItem={(item) => {
                     const { title, action, description } = this.handleMSG(item);
                     return (
@@ -187,10 +245,19 @@ class Message extends React.Component {
                   }}
                 ></List>
               </Tabs.TabPane>
-              <Tabs.TabPane tab="群系统消息" key="群系统消息">
+              <Tabs.TabPane
+                tab=<Badge
+                  count={groupMSGCount}
+                  offset={[5, -7]}
+                  size={"small"}
+                >
+                  群系统消息
+                </Badge>
+                key="群系统消息"
+              >
                 <List
                   bordered
-                  dataSource={this.props.showGroupMSG}
+                  dataSource={showGroupMSG}
                   renderItem={(item) => {
                     const { title, action, description } = this.handleMSG(item);
                     return (

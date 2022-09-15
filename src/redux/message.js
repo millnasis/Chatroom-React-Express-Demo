@@ -24,13 +24,14 @@ export const actions = {
       data,
     };
   },
-  confirm_msg(result, from, to, messageType) {
+  confirm_msg(result, from, to, messageType, room_name = "") {
     return {
       type: actionsType.SEND_TO_CONFIRM_MSG,
       result,
       from,
       to,
       messageType,
+      room_name,
     };
   },
 };

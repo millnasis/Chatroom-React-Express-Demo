@@ -1,9 +1,27 @@
 import React from "react";
-import { Card, Divider, Form, Image, Button, Input, DatePicker } from "antd";
-import { EditOutlined } from "@ant-design/icons";
+import ImgCrop from "antd-img-crop";
+import {
+  Card,
+  Divider,
+  Form,
+  Image,
+  Button,
+  Input,
+  DatePicker,
+  List,
+  Avatar,
+  Upload,
+} from "antd";
+import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import "./index.scss";
 import moment from "moment";
-import { momentFormat } from "../../../constant";
+import { momentFormat, totalIdentity } from "../../../constant";
+import { withUseParamsHooksHOC } from "../../tools/withUseParamsHooksHOC.jsx";
+
+import { actions } from "../../redux/groupInfo.js";
+import { bindActionCreators } from "redux";
+import { connect } from "react-redux";
+const { get_group_info } = actions;
 
 const FormItem = (props) => {
   const { sendToUpdate, username, name, content, identity } = props;
@@ -334,20 +352,123 @@ const FormItem = (props) => {
 class GroupInfo extends React.Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      avatar: {
+        loading: false,
+        url: "",
+        change: false,
+      },
+    };
+  }
+
+  componentDidMount() {
+    this.props.get_group_info(this.props.params.groupid);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.targetInfo !== this.props.targetInfo) {
+      this.setState({
+        avatar: {
+          loading: false,
+          url: this.props.targetInfo.head_picture,
+          change: false,
+        },
+      });
+    }
   }
 
   render() {
+    const { targetInfo, identity } = this.props;
+    console.log(identity);
+    let { room_name, room_id, owner, member, words, foundtime, head_picture } =
+      targetInfo;
+    if (!Array.isArray(member)) {
+      member = [];
+    }
     return (
       <div className="component group-info">
         <div className="group-info-body">
           <div className="group-info-cover">
+            <div
+              className="group-info-blur"
+              style={{ backgroundImage: `url(${head_picture})` }}
+            ></div>
             <div className="group-info-avatar">
-              <Image src="/public/img/logo.png" height={"100%"}></Image>
+              {identity === totalIdentity.OWNER ? (
+                <ImgCrop rotate>
+                  <Upload
+                    action="/api/uploadIMG"
+                    listType="picture-card"
+                    showUploadList={false}
+                    name="picture"
+                    onChange={(info) => {
+                      if (info.file.status === "uploading") {
+                        this.setState({
+                          avatar: { ...this.state.avatar, loading: true },
+                        });
+                        return;
+                      }
+
+                      if (info.file.status === "done") {
+                        // Get this url from response in real world.
+                        this.setState({
+                          avatar: {
+                            loading: false,
+                            url: info.file.response,
+                            change: true,
+                          },
+                        });
+                      }
+                    }}
+                  >
+                    {this.state.avatar.url ? (
+                      <img
+                        src={this.state.avatar.url}
+                        alt="avatar"
+                        style={{
+                          height: "100%",
+                        }}
+                      />
+                    ) : (
+                      <div>
+                        {this.state.avatar.loading ? (
+                          <LoadingOutlined />
+                        ) : (
+                          <PlusOutlined />
+                        )}
+                        <div
+                          style={{
+                            marginTop: 8,
+                          }}
+                        >
+                          Upload
+                        </div>
+                      </div>
+                    )}
+                  </Upload>
+                </ImgCrop>
+              ) : (
+                <Image src={head_picture} height={"100%"}></Image>
+              )}
             </div>
-            <h2>我是嫩爹我是嫩爹啊</h2>
+            <span className="title">{room_name}</span>
+            <div className="group-info-btn">
+              {identity === totalIdentity.STRANGER && <Button>加入群聊</Button>}
+              {identity === totalIdentity.FRIEND && (
+                <Button type="primary" danger>
+                  退出群聊
+                </Button>
+              )}
+              {identity === totalIdentity.OWNER && (
+                <Button type="primary" danger>
+                  解散群聊
+                </Button>
+              )}
+            </div>
           </div>
           <div className="group-info-specific">
-            <h2>群信息</h2>
+            <h2 className="title">群信息</h2>
             <Divider></Divider>
             <Form className="form">
               <Form.Item className="form-item">
@@ -357,14 +478,14 @@ class GroupInfo extends React.Component {
                       <strong>群名称</strong>
                     </label>
                   </div>
-                  <div className="content">{"我是嫩爹"}</div>
+                  <div className="content">{room_name}</div>
                 </div>
               </Form.Item>
               <Divider></Divider>
               <FormItem
                 type="textarea"
                 name="words"
-                content={"我是嫩爹"}
+                content={words}
                 label={
                   <label>
                     <strong>群介绍</strong>
@@ -380,10 +501,38 @@ class GroupInfo extends React.Component {
                     <strong>创建日期</strong>
                   </label>
                 }
-                content={new Date().toString()}
+                content={foundtime}
               ></FormItem>
               <Divider></Divider>
-              
+              <Card
+                className="group-member-list"
+                title={
+                  <label>
+                    <strong style={{ fontSize: "1.4em" }}>
+                      {`群成员（共${member.length}位）`}
+                    </strong>
+                  </label>
+                }
+              >
+                <List
+                  dataSource={member}
+                  renderItem={(item) => {
+                    return (
+                      <List.Item className="group-single-member">
+                        <List.Item.Meta
+                          avatar={
+                            <Avatar
+                              size={"small"}
+                              src={item.head_picture}
+                            ></Avatar>
+                          }
+                          title={item.username}
+                        ></List.Item.Meta>
+                      </List.Item>
+                    );
+                  }}
+                ></List>
+              </Card>
             </Form>
           </div>
         </div>
@@ -392,4 +541,19 @@ class GroupInfo extends React.Component {
   }
 }
 
-export default GroupInfo;
+function mapStateToProps(state) {
+  return {
+    ...state.groupInfo,
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    get_group_info: bindActionCreators(get_group_info, dispatch),
+  };
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withUseParamsHooksHOC(GroupInfo));

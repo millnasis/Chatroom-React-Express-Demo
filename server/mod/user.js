@@ -511,6 +511,7 @@ exports.newRoomHandle = async (req, res, next) => {
     owner: owner,
     foundtime: now,
     member: [owner],
+    words: "暂无",
   });
   await records.insertOne({
     room_id,
@@ -670,11 +671,45 @@ exports.findGroupById = async (req, res, next) => {
     room_id: req.params.groupid,
   };
   let groups = (await db).collection("group");
-  let ret = await groups.find(find).toArray();
+  const ret = await groups
+    .aggregate([
+      {
+        $match: find,
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "member",
+          foreignField: "username",
+          as: "member",
+        },
+      },
+    ])
+    .toArray();
   if (ret.length === 0) {
     res.status(404).send("无房间");
+    return;
   }
-  res.send(ret[0]);
+  ret[0].member = ret[0].member.map((v) => {
+    delete v.group;
+    delete v.message;
+    delete v.friend;
+    return v;
+  });
+  let identity = null;
+  if (ret[0].owner === req.session.user.username) {
+    identity = totalIdentity.OWNER;
+  } else if (
+    ret[0].member.find((v) => v.username === req.session.user.username)
+  ) {
+    identity = totalIdentity.FRIEND;
+  } else {
+    identity = totalIdentity.STRANGER;
+  }
+  res.send({
+    groupInfo: ret[0],
+    identity,
+  });
 };
 
 function handleProject(name) {

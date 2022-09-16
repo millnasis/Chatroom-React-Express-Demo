@@ -37,7 +37,7 @@ class App extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    console.log(this.props.login, this.props.userInfo);
+    // console.log(this.props.login, this.props.userInfo);
     if (
       prevProps.location.pathname !== this.props.location.pathname ||
       this.props.login !== prevProps.login
@@ -147,7 +147,10 @@ class App extends React.Component {
             <Route path="/info/:username" element={<Info></Info>}></Route>
             <Route path="/login" element={<LoginPage></LoginPage>}></Route>
             <Route path="/logout" element={<Logout></Logout>}></Route>
-            <Route path="/group" element={<GroupInfo></GroupInfo>}></Route>
+            <Route
+              path="/group/:groupid"
+              element={<GroupInfo></GroupInfo>}
+            ></Route>
             <Route
               path="/create-room"
               element={<CreateRoom></CreateRoom>}

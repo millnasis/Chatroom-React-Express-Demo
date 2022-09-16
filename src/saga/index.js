@@ -7,6 +7,7 @@ import * as chatroom from "./chatroom.js";
 import * as search from "./search.js";
 import * as message from "./message.js";
 import * as createroom from "./createroom.js";
+import * as groupInfo from "./groupInfo.js";
 
 // 在根saga上，启用所有的监听函数
 export default function* rootSaga() {
@@ -24,4 +25,5 @@ export default function* rootSaga() {
   yield fork(search.sendToSearchGroup);
   yield fork(message.sendToConfirmMSG);
   yield fork(createroom.sendToCreateRoom);
+  yield fork(groupInfo.sendToGetGroupInfo);
 }

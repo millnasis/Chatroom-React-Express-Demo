@@ -28,7 +28,7 @@ export function* sendToGetGroup() {
             (e.private ? "private" : "public") + e.sort + e.room_id;
           const { chatroom } = store.getState();
           const { registerRoomRecord } = chatroom;
-          console.log(registerRoomRecord, recordName);
+          // console.log(registerRoomRecord, recordName);
           if (!registerRoomRecord.has(recordName)) {
             e.socket.on("tips", function (data) {
               store.dispatch(socket_tips(e.private, e.sort, e.room_id, data));

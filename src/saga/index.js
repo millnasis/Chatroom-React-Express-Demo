@@ -26,4 +26,5 @@ export default function* rootSaga() {
   yield fork(message.sendToConfirmMSG);
   yield fork(createroom.sendToCreateRoom);
   yield fork(groupInfo.sendToGetGroupInfo);
+  yield fork(groupInfo.sendToJoinGroup);
 }

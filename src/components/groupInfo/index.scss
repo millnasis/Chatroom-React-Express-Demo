@@ -41,7 +41,7 @@
         background-color: rgba(255, 255, 255, 0.3);
         border-radius: 5px;
       }
-      .group-info-btn{
+      .group-info-btn {
         margin-top: 20px;
         z-index: 5;
       }
@@ -94,6 +94,15 @@
                   margin-right: 20px;
                 }
               }
+            }
+          }
+        }
+        .group-member-list {
+          .group-single-member {
+            transition: 0.3s all ease-in-out;
+            cursor: pointer;
+            &:hover {
+              background-color: darken($color: #fff, $amount: 10%);
             }
           }
         }

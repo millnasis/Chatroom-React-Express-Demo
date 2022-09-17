@@ -19,7 +19,7 @@ class Message extends React.Component {
   }
 
   handleMSG = (item) => {
-    const { result, from, to, messageType, read, date, room_name } = item;
+    const { result, from, to, messageType, read, date, room } = item;
     let title = "",
       action = [],
       description = "";
@@ -61,7 +61,7 @@ class Message extends React.Component {
           );
         }
       } else if (messageType === totalGrouprMsg.INVITE_GROUP) {
-        title = `${from.username}已经同意加入群聊${room_name}`;
+        title = `${from.username}已经同意加入群聊${room.room_name}`;
         if (!read) {
           action.push(
             <Button
@@ -99,7 +99,7 @@ class Message extends React.Component {
           );
         }
       } else if (messageType === totalGrouprMsg.INVITE_GROUP) {
-        title = `${from.username}拒绝加入群聊${room_name}`;
+        title = `${from.username}拒绝加入群聊${room.room_name}`;
         if (!read) {
           action.push(
             <Button
@@ -150,7 +150,7 @@ class Message extends React.Component {
           ];
         }
       } else if (messageType === totalGrouprMsg.INVITE_GROUP) {
-        title = `${from.username}邀请您加入群聊${room_name}`;
+        title = `${from.username}邀请您加入群聊${room.room_name}`;
         if (!read) {
           action = [
             <Button
@@ -161,7 +161,7 @@ class Message extends React.Component {
                   from.username,
                   to,
                   messageType,
-                  room_name
+                  room.room_id
                 )
               }
             >
@@ -174,7 +174,40 @@ class Message extends React.Component {
                   from.username,
                   to,
                   messageType,
-                  room_name
+                  room.room_id
+                )
+              }
+            >
+              拒绝
+            </Button>,
+          ];
+        }
+      } else if (messageType === totalGrouprMsg.JOIN_GROUP) {
+        title = `${from.username}申请加入您的群聊${room.room_name}`;
+        if (!read) {
+          action = [
+            <Button
+              type="primary"
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.CONFIRM,
+                  from.username,
+                  to,
+                  messageType,
+                  room.room_id
+                )
+              }
+            >
+              同意
+            </Button>,
+            <Button
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.DENY,
+                  from.username,
+                  to,
+                  messageType,
+                  room.room_id
                 )
               }
             >

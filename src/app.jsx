@@ -15,6 +15,8 @@ import { actions } from "./redux/root";
 import { bindActionCreators } from "redux";
 import Logout from "./components/logout/index.jsx";
 import GroupInfo from "./components/groupInfo/index.jsx";
+import KeepAlive from "react-activation";
+// 与Vue的KeepAlive相同实现的React应用
 
 const { get_user_info, clear_notification } = actions;
 
@@ -141,7 +143,15 @@ class App extends React.Component {
         </Header>
         <Content className="main-content">
           <Routes>
-            <Route path="/main" element={<ChatRoom></ChatRoom>}></Route>
+            <Route
+              path="/main"
+              element={
+                <KeepAlive cacheKey="UNIQUE_KEY">
+                  {/* 这里让聊天窗保证在切换页面的时候不被销毁 */}
+                  <ChatRoom></ChatRoom>
+                </KeepAlive>
+              }
+            ></Route>
             <Route path="/msg" element={<Message></Message>}></Route>
             <Route path="/search" element={<Search></Search>}></Route>
             <Route path="/info/:username" element={<Info></Info>}></Route>

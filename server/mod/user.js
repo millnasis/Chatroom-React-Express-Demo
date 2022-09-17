@@ -447,30 +447,42 @@ exports.handleMessage = async (req, res, next) => {
 
 exports.sendMessage = async (req, res, next) => {
   let users = (await db).collection("users");
-  if (req.body.messageType === totalGrouprMsg.JOIN_GROUP) {
+  let group = (await db).collection("group");
+  const { room_id, from, to, messageType } = req.body;
+  if (messageType === totalGrouprMsg.JOIN_GROUP) {
+    const query = await group.find({ room_id }).toArray();
+    if (query.length === 0) {
+      res.status(500).send("群聊不存在");
+      return;
+    }
     let ret = await users.updateOne(
-      { username: req.body.owner },
+      { username: to },
       {
         $push: {
           message: {
             read: false,
-            ...req.body,
+            from,
+            to,
+            messageType,
             private: false,
             date: new Date(),
+            room_id: query[0].room_id,
           },
         },
       }
     );
     console.log(ret);
     res.send("OK");
-  } else if (req.body.messageType === totalUserMsg.ADD_FRIEND) {
+  } else if (messageType === totalUserMsg.ADD_FRIEND) {
     let ret = await users.updateOne(
-      { username: req.body.to },
+      { username: to },
       {
         $push: {
           message: {
             read: false,
-            ...req.body,
+            from,
+            to,
+            messageType,
             private: true,
             date: new Date(),
           },
@@ -500,7 +512,7 @@ exports.newRoomHandle = async (req, res, next) => {
   let group = (await db).collection("group");
   let users = (await db).collection("users");
   let records = (await db).collection("records");
-  const { groupName, owner, inviteList, avatar } = req.body;
+  const { groupName, owner, inviteList, avatar, words } = req.body;
   let now = new Date();
   const room_id = owner + "_" + now.getTime();
   await group.insertOne({
@@ -511,7 +523,7 @@ exports.newRoomHandle = async (req, res, next) => {
     owner: owner,
     foundtime: now,
     member: [owner],
-    words: "暂无",
+    words,
   });
   await records.insertOne({
     room_id,
@@ -546,7 +558,7 @@ exports.newRoomHandle = async (req, res, next) => {
                 messageType: totalGrouprMsg.INVITE_GROUP,
                 from: req.session.user.username,
                 to: v,
-                room_name: groupName,
+                room_id,
                 private: false,
                 date: new Date(),
               },
@@ -644,10 +656,19 @@ exports.deleteGroup = async (req, res, next) => {
 };
 
 exports.updateGroupInfo = async (req, res, next) => {
-  let find = {
+  const find = {
     room_id: req.params.groupid,
   };
-  let group = (await db).collection("group");
+  const group = (await db).collection("group");
+  const query = await group.find(find).toArray();
+  if (query.length === 0) {
+    res.status(500).send("群聊未找到");
+    return;
+  }
+  if (query[0].owner !== req.session.user.username) {
+    res.status(403).send("无权限");
+    return;
+  }
   if (req.body.deleteUser) {
     let ret = await group.updateOne(find, {
       $pull: { member: req.body.deleteUser },
@@ -655,14 +676,17 @@ exports.updateGroupInfo = async (req, res, next) => {
     console.log(ret);
     res.send("OK");
   } else {
+    const { name, data } = req.body;
     let ret = await group.updateOne(find, {
       $set: {
-        head_picture: req.body.head_picture,
-        room_name: req.body.room_name,
+        [name]: data,
       },
     });
-    console.log(ret);
-    res.send("OK");
+    if (!ret) {
+      res.status(500).send("服务端出错");
+      return;
+    }
+    res.send(data);
   }
 };
 
@@ -962,6 +986,7 @@ exports.findMyUser = async (req, res, next) => {
     return;
   }
   const user = (await db).collection("users");
+  const group = (await db).collection("group");
   try {
     let userInfo = await user
       .aggregate([
@@ -1018,7 +1043,22 @@ exports.findMyUser = async (req, res, next) => {
       ])
       .toArray();
     if (messageArr.length > 0) {
-      userInfo[0].message = messageArr[0].message;
+      const msg = await Promise.all(
+        messageArr[0].message.map(async (v) => {
+          if (!v.room_id) {
+            return v;
+          } else {
+            const room = await group.find({ room_id: v.room_id }).toArray();
+
+            return {
+              ...v,
+              room,
+            };
+          }
+        })
+      );
+      userInfo[0].message = msg;
+      console.log(msg, messageArr[0].message);
     }
     req.session.user = userInfo[0];
     res.send(req.session.user);

@@ -35,6 +35,7 @@ import {
   ContextMenuItem,
   Submenu,
 } from "rctx-contextmenu";
+import { momentFormat } from "../../../constant";
 
 const { Panel } = Collapse;
 const { TabPane } = Tabs;
@@ -139,20 +140,35 @@ class ChatRoom extends React.Component {
           return (
             <ContextMenu id={v.room_id} key={v.room_id}>
               <Submenu title="移动联系人至">
-                {friendArray
-                  .filter((e) => e.sort_name !== v.sort)
-                  .map((e1) => {
-                    return (
-                      <ContextMenuItem
-                        key={e1.sort_name}
-                        onClick={() =>
-                          this.props.change_sort(v.group_id, e1.sort_name)
-                        }
-                      >
-                        {e1.sort_name}
-                      </ContextMenuItem>
-                    );
-                  })}
+                {v.private
+                  ? friendArray
+                      .filter((e) => e.sort_name !== v.sort)
+                      .map((e1) => {
+                        return (
+                          <ContextMenuItem
+                            key={e1.sort_name}
+                            onClick={() =>
+                              this.props.change_sort(v.group_id, e1.sort_name)
+                            }
+                          >
+                            {e1.sort_name}
+                          </ContextMenuItem>
+                        );
+                      })
+                  : groupArray
+                      .filter((e) => e.sort_name !== v.sort)
+                      .map((e1) => {
+                        return (
+                          <ContextMenuItem
+                            key={e1.sort_name}
+                            onClick={() =>
+                              this.props.change_sort(v.group_id, e1.sort_name)
+                            }
+                          >
+                            {e1.sort_name}
+                          </ContextMenuItem>
+                        );
+                      })}
                 <ContextMenuItem
                   onClick={() => this.setState({ createSortModal: v })}
                 >
@@ -216,25 +232,30 @@ class ChatRoom extends React.Component {
                         dataSource={v.arr}
                         renderItem={(item) => {
                           return (
-                            <List.Item
-                              className="friend"
-                              onClick={() => {
-                                this.props.open_window(
-                                  false,
-                                  item.sort,
-                                  item.room_id
-                                );
-                                this.setState({ target: null });
-                              }}
+                            <ContextMenuTrigger
+                              id={item.room_id}
+                              key={item.room_id}
                             >
-                              <List.Item.Meta
-                                avatar={
-                                  <Avatar src={item.head_picture}></Avatar>
-                                }
-                                title={item.room_name}
-                                description={`共${item.member.length}名群员`}
-                              ></List.Item.Meta>
-                            </List.Item>
+                              <List.Item
+                                className="friend"
+                                onClick={() => {
+                                  this.props.open_window(
+                                    false,
+                                    item.sort,
+                                    item.room_id
+                                  );
+                                  this.setState({ target: null });
+                                }}
+                              >
+                                <List.Item.Meta
+                                  avatar={
+                                    <Avatar src={item.head_picture}></Avatar>
+                                  }
+                                  title={item.room_name}
+                                  description={`共${item.member.length}名群员`}
+                                ></List.Item.Meta>
+                              </List.Item>
+                            </ContextMenuTrigger>
                           );
                         }}
                       ></List>
@@ -306,7 +327,9 @@ class ChatRoom extends React.Component {
                                   dangerouslySetInnerHTML={{ __html: content }}
                                 ></div>
                               }
-                              datetime={moment(new Date(time)).fromNow()}
+                              datetime={moment(new Date(time)).format(
+                                momentFormat.toSec
+                              )}
                             />
                           </li>
                         );
@@ -317,6 +340,7 @@ class ChatRoom extends React.Component {
               </div>
               <div className="input">
                 <EditorWarp
+                  key={this.state.target.group_id}
                   close_window={this.props.close_window}
                   target={this.state.target}
                   register_menu_item={this.props.register_menu_item}
@@ -380,10 +404,19 @@ class ChatRoom extends React.Component {
                     width={"50%"}
                     preview={false}
                     style={{ cursor: "pointer" }}
-                    onClick={() => null}
+                    onClick={() =>
+                      this.props.navigate(`/group/${this.state.target.room_id}`)
+                    }
                   ></Image>
                   <h2>
-                    <strong style={{ cursor: "pointer" }} onClick={() => null}>
+                    <strong
+                      style={{ cursor: "pointer" }}
+                      onClick={() =>
+                        this.props.navigate(
+                          `/group/${this.state.target.room_id}`
+                        )
+                      }
+                    >
                       {this.state.target.room_name}
                     </strong>
                   </h2>
@@ -393,7 +426,12 @@ class ChatRoom extends React.Component {
                       dataSource={this.state.target.member}
                       renderItem={(item) => {
                         return (
-                          <List.Item className="group-single-member">
+                          <List.Item
+                            className="group-single-member"
+                            onClick={() =>
+                              this.props.navigate(`/info/${item.username}`)
+                            }
+                          >
                             <List.Item.Meta
                               avatar={
                                 <Avatar

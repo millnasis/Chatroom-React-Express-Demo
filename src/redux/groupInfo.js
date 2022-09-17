@@ -7,6 +7,8 @@ const initialState = {
 export const actionsType = {
   SEND_TO_GROUP_INFO: "SEND_TO_GROUP_INFO",
   RESPONSE_GROUP_INFO: "RESPONSE_GROUP_INFO",
+  SEND_TO_JOIN_GROUP: "SEND_TO_JOIN_GROUP",
+  SEND_TO_QUIT_GROUP: "SEND_TO_QUIT_GROUP",
 };
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
@@ -21,6 +23,19 @@ export const actions = {
     return {
       type: actionsType.RESPONSE_GROUP_INFO,
       data,
+    };
+  },
+  join_group(room_id, username, owner) {
+    return {
+      type: actionsType.SEND_TO_JOIN_GROUP,
+      room_id,
+      username,
+      owner,
+    };
+  },
+  quit_group() {
+    return {
+      type: actionsType.SEND_TO_QUIT_GROUP,
     };
   },
 };

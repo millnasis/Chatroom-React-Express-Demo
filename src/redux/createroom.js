@@ -13,13 +13,14 @@ export const actionsType = {
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
 export const actions = {
-  create_room(groupName, owner, inviteList, avatar) {
+  create_room(groupName, owner, inviteList, avatar, words) {
     return {
       type: actionsType.SEND_TO_CREATE_ROOM,
       groupName,
       owner,
       inviteList,
       avatar,
+      words,
     };
   },
   loading() {

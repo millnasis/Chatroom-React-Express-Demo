@@ -72,18 +72,22 @@ class CreateRoom extends React.Component {
           >
             <Form
               onFinish={(value) => {
-                const { room_name } = value;
+                const { room_name, words } = value;
                 const { targetKeys, avatar } = this.state;
                 this.props.create_room(
                   room_name,
                   this.props.global.userInfo.username,
                   targetKeys,
-                  avatar.url
+                  avatar.url,
+                  words
                 );
               }}
             >
               <Item label="群聊名称" required name={"room_name"}>
                 <Input></Input>
+              </Item>
+              <Item label="群介绍" required name={"words"}>
+                <Input.TextArea></Input.TextArea>
               </Item>
               <Item label="群聊头像" required>
                 <ImgCrop rotate>

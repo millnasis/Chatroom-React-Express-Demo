@@ -390,6 +390,9 @@ class Info extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
+    if (prevProps.params.username !== this.props.params.username) {
+      this.props.get_info(this.props.params.username);
+    }
     if (prevProps.targetInfo !== this.props.targetInfo) {
       this.setState({
         avatar: {

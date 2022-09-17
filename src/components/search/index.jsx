@@ -9,7 +9,21 @@ const { get_group_search, get_user_search } = actions;
 
 function SingleCard(props) {
   console.log(props);
-  return (
+  return props.group ? (
+    <div
+      className="single-card"
+      onClick={() => props.navigate("/group/" + props.room_id)}
+    >
+      <Avatar src={props.avatar} className="card-avatar"></Avatar>
+      <div className="info">
+        <div className="username">{props.room_name}</div>
+        <div className="msg">{props.msg}</div>
+        <div className="action">
+          <Button>+添加</Button>
+        </div>
+      </div>
+    </div>
+  ) : (
     <div
       className="single-card"
       onClick={() => props.navigate("/info/" + props.username)}
@@ -53,6 +67,7 @@ class Search extends React.Component {
                       return (
                         <Card.Grid className="search-card-grid" key={username}>
                           <SingleCard
+                            group={false}
                             avatar={head_picture}
                             msg={`${sex} ${area.join("")}`}
                             username={username}
@@ -80,9 +95,12 @@ class Search extends React.Component {
                       return (
                         <Card.Grid className="search-card-grid" key={room_id}>
                           <SingleCard
+                            group={true}
+                            room_name={room_name}
                             avatar={head_picture}
                             msg={`群聊共${member.length}人`}
-                            username={room_name}
+                            navigate={this.props.navigate}
+                            room_id={room_id}
                           ></SingleCard>
                         </Card.Grid>
                       );

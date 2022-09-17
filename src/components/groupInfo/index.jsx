@@ -1,4 +1,5 @@
 import React from "react";
+import axios from "axios";
 import ImgCrop from "antd-img-crop";
 import {
   Card,
@@ -17,23 +18,24 @@ import "./index.scss";
 import moment from "moment";
 import { momentFormat, totalIdentity } from "../../../constant";
 import { withUseParamsHooksHOC } from "../../tools/withUseParamsHooksHOC.jsx";
+import { withUseNavigateHooksHOC } from "../../tools/withUseNavigateHooksHOC.jsx";
 
 import { actions } from "../../redux/groupInfo.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-const { get_group_info } = actions;
+const { get_group_info, join_group, quit_group } = actions;
 
 const FormItem = (props) => {
-  const { sendToUpdate, username, name, content, identity } = props;
+  const { sendToUpdate, room_id, name, content, identity } = props;
   const sendMethod = async () => {
     try {
-      // const ret = await sendToUpdate(username, name, value);
-      // if (!ret) {
-      //   return;
-      // }
-      // setEdit(false);
-      // setRecord(ret);
-      // setValue(ret);
+      const ret = await sendToUpdate(room_id, name, value);
+      if (!ret) {
+        return;
+      }
+      setEdit(false);
+      setRecord(ret);
+      setValue(ret);
     } catch (error) {
       console.error(error);
     }
@@ -54,7 +56,7 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {true ? (
+              {identity === totalIdentity.OWNER ? (
                 !edit ? (
                   <>
                     {record}
@@ -98,7 +100,7 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {true ? (
+              {identity === totalIdentity.OWNER ? (
                 !edit ? (
                   <>
                     {record}
@@ -140,7 +142,7 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {true ? (
+              {identity === totalIdentity.OWNER ? (
                 !edit ? (
                   <>
                     {record}
@@ -181,7 +183,7 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {true ? (
+              {identity === totalIdentity.OWNER ? (
                 !edit ? (
                   <>
                     {record}
@@ -224,7 +226,7 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {true ? (
+              {identity === totalIdentity.OWNER ? (
                 !edit ? (
                   <>
                     {record}
@@ -266,7 +268,7 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {true ? (
+              {identity === totalIdentity.OWNER ? (
                 !edit ? (
                   <>
                     {record}
@@ -308,7 +310,7 @@ const FormItem = (props) => {
           <div className="form-item-inner">
             <div className="label">{props.label}</div>
             <div className="content">
-              {true ? (
+              {identity === totalIdentity.OWNER ? (
                 !edit ? (
                   <>
                     {record}
@@ -364,10 +366,20 @@ class GroupInfo extends React.Component {
 
   componentDidMount() {
     this.props.get_group_info(this.props.params.groupid);
+    this.setState({
+      avatar: {
+        loading: false,
+        url: this.props.targetInfo.head_picture,
+        change: false,
+      },
+    });
   }
 
   componentDidUpdate(prevProps) {
-    if (prevProps.targetInfo !== this.props.targetInfo) {
+    if (
+      prevProps.targetInfo !== this.props.targetInfo &&
+      this.props.targetInfo.head_picture
+    ) {
       this.setState({
         avatar: {
           loading: false,
@@ -378,9 +390,23 @@ class GroupInfo extends React.Component {
     }
   }
 
+  sendToUpdate = async (room_id, name, data) => {
+    try {
+      const response = await axios.put(`/api/group/${room_id}`, {
+        name,
+        data,
+      });
+      if (response && response.status === 200) {
+        return response.data;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  };
+
   render() {
     const { targetInfo, identity } = this.props;
-    console.log(identity);
     let { room_name, room_id, owner, member, words, foundtime, head_picture } =
       targetInfo;
     if (!Array.isArray(member)) {
@@ -394,6 +420,30 @@ class GroupInfo extends React.Component {
               className="group-info-blur"
               style={{ backgroundImage: `url(${head_picture})` }}
             ></div>
+            {this.state.avatar.change && (
+              <Button
+                style={{ zIndex: "5", marginBottom: "10px" }}
+                onClick={async () => {
+                  try {
+                    const ret = await this.sendToUpdate(
+                      room_id,
+                      "head_picture",
+                      this.state.avatar.url
+                    );
+                    if (!ret) {
+                      return;
+                    }
+                    this.setState({
+                      avatar: { ...this.state.avatar, change: false },
+                    });
+                  } catch (error) {
+                    console.error(error);
+                  }
+                }}
+              >
+                保存头像
+              </Button>
+            )}
             <div className="group-info-avatar">
               {identity === totalIdentity.OWNER ? (
                 <ImgCrop rotate>
@@ -454,7 +504,19 @@ class GroupInfo extends React.Component {
             </div>
             <span className="title">{room_name}</span>
             <div className="group-info-btn">
-              {identity === totalIdentity.STRANGER && <Button>加入群聊</Button>}
+              {identity === totalIdentity.STRANGER && (
+                <Button
+                  onClick={() =>
+                    this.props.join_group(
+                      room_id,
+                      this.props.global.userInfo.username,
+                      owner
+                    )
+                  }
+                >
+                  加入群聊
+                </Button>
+              )}
               {identity === totalIdentity.FRIEND && (
                 <Button type="primary" danger>
                   退出群聊
@@ -471,18 +533,24 @@ class GroupInfo extends React.Component {
             <h2 className="title">群信息</h2>
             <Divider></Divider>
             <Form className="form">
-              <Form.Item className="form-item">
-                <div className="form-item-inner">
-                  <div className="label">
-                    <label>
-                      <strong>群名称</strong>
-                    </label>
-                  </div>
-                  <div className="content">{room_name}</div>
-                </div>
-              </Form.Item>
+              <FormItem
+                room_id={room_id}
+                sendToUpdate={this.sendToUpdate}
+                identity={identity}
+                label={
+                  <label>
+                    <strong>群名称</strong>
+                  </label>
+                }
+                type="input"
+                name="room_name"
+                content={room_name}
+              ></FormItem>
               <Divider></Divider>
               <FormItem
+                room_id={room_id}
+                sendToUpdate={this.sendToUpdate}
+                identity={identity}
                 type="textarea"
                 name="words"
                 content={words}
@@ -494,6 +562,9 @@ class GroupInfo extends React.Component {
               ></FormItem>
               <Divider></Divider>
               <FormItem
+                room_id={room_id}
+                sendToUpdate={this.sendToUpdate}
+                identity={false}
                 type="date"
                 name="date"
                 label={
@@ -518,7 +589,12 @@ class GroupInfo extends React.Component {
                   dataSource={member}
                   renderItem={(item) => {
                     return (
-                      <List.Item className="group-single-member">
+                      <List.Item
+                        className="group-single-member"
+                        onClick={() =>
+                          this.props.navigate(`/info/${item.username}`)
+                        }
+                      >
                         <List.Item.Meta
                           avatar={
                             <Avatar
@@ -543,6 +619,7 @@ class GroupInfo extends React.Component {
 
 function mapStateToProps(state) {
   return {
+    global: state.global,
     ...state.groupInfo,
   };
 }
@@ -550,10 +627,12 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     get_group_info: bindActionCreators(get_group_info, dispatch),
+    join_group: bindActionCreators(join_group, dispatch),
+    quit_group: bindActionCreators(quit_group, dispatch),
   };
 }
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withUseParamsHooksHOC(GroupInfo));
+)(withUseParamsHooksHOC(withUseNavigateHooksHOC(GroupInfo)));

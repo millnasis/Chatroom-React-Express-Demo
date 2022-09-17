@@ -12,12 +12,13 @@ export function* sendToCreateRoom() {
     try {
       const action = yield take(actionsType.SEND_TO_CREATE_ROOM);
       yield put(actions.loading());
-      const { groupName, owner, inviteList, avatar } = action;
+      const { groupName, owner, inviteList, avatar, words } = action;
       const response = yield call(axios.post, "/api/group", {
         groupName,
         owner,
         inviteList,
         avatar,
+        words,
       });
       if (response && response.status === 200) {
         yield put(rootActions.set_notification(0, "创建成功"));

@@ -13,6 +13,7 @@ import {
   Modal,
   Form,
   Button,
+  Badge,
 } from "antd";
 import moment from "moment";
 import "./index.scss";
@@ -101,11 +102,19 @@ class ChatRoom extends React.Component {
 
   render() {
     const { friendArray, groupArray, talkWindow } = this.props;
+    let friendCount = 0,
+      groupCount = 0;
     let contextMenuList = [];
-    friendArray.forEach((sort) => {
+    friendArray.forEach((sort, i) => {
+      let count = friendArray[i].arr.reduce((pre, cur) => pre + cur.count, 0);
+      friendCount += count;
+      friendArray[i].count = count;
       contextMenuList = contextMenuList.concat(sort.arr);
     });
-    groupArray.forEach((sort) => {
+    groupArray.forEach((sort, i) => {
+      let count = groupArray[i].arr.reduce((pre, cur) => pre + cur.count, 0);
+      groupCount += count;
+      groupArray[i].count = count;
       contextMenuList = contextMenuList.concat(sort.arr);
     });
     console.log(friendArray, groupArray);
@@ -180,11 +189,25 @@ class ChatRoom extends React.Component {
         })}
         <div className="list">
           <Tabs centered>
-            <TabPane tab="好友" key="好友">
+            <TabPane
+              tab={
+                <Badge count={friendCount} offset={[10, -5]}>
+                  好友
+                </Badge>
+              }
+              key="好友"
+            >
               <Collapse>
                 {friendArray.map((v) => {
                   return (
-                    <Panel header={v.sort_name} key={v.sort_name}>
+                    <Panel
+                      header={
+                        <Badge count={v.count} offset={[5, 0]}>
+                          {v.sort_name}
+                        </Badge>
+                      }
+                      key={v.sort_name}
+                    >
                       <List
                         dataSource={v.arr}
                         renderItem={(item) => {
@@ -195,6 +218,7 @@ class ChatRoom extends React.Component {
                             >
                               <List.Item
                                 className="friend"
+                                actions={[<Badge count={item.count}></Badge>]}
                                 onClick={() => {
                                   this.props.open_window(
                                     true,
@@ -223,11 +247,25 @@ class ChatRoom extends React.Component {
                 })}
               </Collapse>
             </TabPane>
-            <TabPane tab="群聊" key={"群聊"}>
+            <TabPane
+              tab={
+                <Badge count={groupCount} offset={[10, -5]}>
+                  群聊
+                </Badge>
+              }
+              key={"群聊"}
+            >
               <Collapse>
                 {groupArray.map((v) => {
                   return (
-                    <Panel header={v.sort_name} key={v.sort_name}>
+                    <Panel
+                      header={
+                        <Badge count={v.count} offset={[5, 0]}>
+                          {v.sort_name}
+                        </Badge>
+                      }
+                      key={v.sort_name}
+                    >
                       <List
                         dataSource={v.arr}
                         renderItem={(item) => {
@@ -238,6 +276,7 @@ class ChatRoom extends React.Component {
                             >
                               <List.Item
                                 className="friend"
+                                actions={[<Badge count={item.count}></Badge>]}
                                 onClick={() => {
                                   this.props.open_window(
                                     false,
@@ -399,6 +438,7 @@ class ChatRoom extends React.Component {
                 </div>
               ) : (
                 <div className="info-area-card group">
+                  <h3>群资料</h3>
                   <Image
                     src={this.state.target.head_picture}
                     width={"50%"}
@@ -420,6 +460,10 @@ class ChatRoom extends React.Component {
                       {this.state.target.room_name}
                     </strong>
                   </h2>
+                  <p className="group-info-words">
+                    <strong>群介绍：</strong>
+                    {this.state.target.words}
+                  </p>
                   <Divider></Divider>
                   <Card className="group-member-list" title={`群成员（${50}）`}>
                     <List

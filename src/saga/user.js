@@ -27,7 +27,7 @@ export function* getUserInfo() {
           yield put(messageActions.response_user_msg(response.data.message));
         }
         if (action.group) {
-          yield put(chatroomActions.get_group());
+          yield put(chatroomActions.get_group(response.data));
         }
       }
     } catch (error) {

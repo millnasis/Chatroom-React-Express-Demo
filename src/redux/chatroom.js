@@ -51,9 +51,10 @@ export const actionsType = {
 
 // 根据上面定义的action类型制作成的action生成器，同时把传入的参数一同加到action中
 export const actions = {
-  get_group() {
+  get_group(userInfo) {
     return {
       type: actionsType.SEND_TO_GET_GROUP_ARRAY,
+      userInfo,
     };
   },
   response_group(data) {
@@ -71,13 +72,14 @@ export const actions = {
       name,
     };
   },
-  socket_message(privateSign, sort, name, data) {
+  socket_message(privateSign, sort, name, data, userInfo) {
     return {
       type: actionsType.SOCKET_ON_MESSAGE,
       sort,
       data,
       privateSign,
       name,
+      userInfo,
     };
   },
   socket_delete(privateSign, sort, name, data) {
@@ -173,14 +175,59 @@ export function reducer(state = initialState, action) {
     case actionsType.OPEN_TALK_WINDOW: {
       const { privateSign, name, sort } = action;
 
-      return {
-        ...state,
-        talkWindow: {
-          show: true,
-          private: privateSign,
-          target: { sort, room_id: name },
-        },
-      };
+      if (privateSign) {
+        return {
+          ...state,
+          talkWindow: {
+            show: true,
+            private: privateSign,
+            target: { sort, room_id: name },
+          },
+          friendArray: state.friendArray.map((v) => {
+            if (v.sort_name === sort) {
+              return {
+                sort_name: v.sort_name,
+                arr: v.arr.map((e) => {
+                  if (e.room_id === name) {
+                    return {
+                      ...e,
+                      count: 0,
+                    };
+                  }
+                  return e;
+                }),
+              };
+            }
+            return v;
+          }),
+        };
+      } else {
+        return {
+          ...state,
+          talkWindow: {
+            show: true,
+            private: privateSign,
+            target: { sort, room_id: name },
+          },
+          groupArray: state.groupArray.map((v) => {
+            if (v.sort_name === sort) {
+              return {
+                sort_name: v.sort_name,
+                arr: v.arr.map((e) => {
+                  if (e.room_id === name) {
+                    return {
+                      ...e,
+                      count: 0,
+                    };
+                  }
+                  return e;
+                }),
+              };
+            }
+            return v;
+          }),
+        };
+      }
     }
     case actionsType.CLOSE_TALK_WINDOW:
       return {
@@ -195,7 +242,7 @@ export function reducer(state = initialState, action) {
         },
       };
     case actionsType.SOCKET_ON_MESSAGE: {
-      const { privateSign, sort, name, data } = action;
+      const { privateSign, sort, name, data, userInfo } = action;
       if (privateSign) {
         return {
           ...state,
@@ -207,6 +254,10 @@ export function reducer(state = initialState, action) {
                   if (e.room_id === name) {
                     return {
                       ...e,
+                      count:
+                        data.username === userInfo.username
+                          ? e.count
+                          : e.count + 1,
                       showMSG: [...e.showMSG, data],
                     };
                   }
@@ -228,6 +279,10 @@ export function reducer(state = initialState, action) {
                   if (e.room_id === name) {
                     return {
                       ...e,
+                      count:
+                        data.username === userInfo.username
+                          ? e.count
+                          : e.count + 1,
                       showMSG: [...e.showMSG, data],
                     };
                   }

@@ -85,6 +85,18 @@ class App extends React.Component {
 
   render() {
     let { head_picture, username, message } = this.props.userInfo;
+    const { groupArray, friendArray } = this.props.chatroom;
+    let roomCount = 0;
+    groupArray.forEach((e) => {
+      e.arr.forEach((v) => {
+        roomCount += v.count;
+      });
+    });
+    friendArray.forEach((e) => {
+      e.arr.forEach((v) => {
+        roomCount += v.count;
+      });
+    });
     if (!Array.isArray(message)) {
       message = [];
     }
@@ -96,7 +108,11 @@ class App extends React.Component {
     });
     const menuItems = [
       {
-        label: "聊天室",
+        label: (
+          <Badge count={roomCount} offset={[8, -7]}>
+            <span style={{ color: "white" }}>聊天室</span>
+          </Badge>
+        ),
         key: "main",
       },
       {
@@ -112,7 +128,7 @@ class App extends React.Component {
         key: "search",
       },
       {
-        label: "新建房间",
+        label: "新建群聊",
         key: "create-room",
       },
       {

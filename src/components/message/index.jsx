@@ -78,6 +78,25 @@ class Message extends React.Component {
             </Button>
           );
         }
+      } else if(messageType === totalGrouprMsg.JOIN_GROUP){
+        title = `${from.username}已经同意了您加入群聊${room.room_name}的请求`
+        if (!read) {
+          action.push(
+            <Button
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.CONFIRM_BACK,
+                  from.username,
+                  to,
+                  messageType,
+                  room.room_id
+                )
+              }
+            >
+              好的
+            </Button>
+          );
+        }
       }
     } else if (result === totalResult.DENY_BACK) {
       if (messageType === totalUserMsg.ADD_FRIEND) {
@@ -100,6 +119,24 @@ class Message extends React.Component {
         }
       } else if (messageType === totalGrouprMsg.INVITE_GROUP) {
         title = `${from.username}拒绝加入群聊${room.room_name}`;
+        if (!read) {
+          action.push(
+            <Button
+              onClick={() =>
+                this.props.confirm_msg(
+                  totalResult.DENY_BACK,
+                  from.username,
+                  to,
+                  messageType
+                )
+              }
+            >
+              好的
+            </Button>
+          );
+        }
+      } else if(messageType === totalGrouprMsg.JOIN_GROUP){
+        title = `${from.username}拒绝了您加入群聊${room.room_name}的请求`
         if (!read) {
           action.push(
             <Button

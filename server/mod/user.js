@@ -102,327 +102,252 @@ exports.deleteFriend = async (req, res, next) => {
 };
 
 exports.handleMessage = async (req, res, next) => {
-  let users = (await db).collection("users");
-  let group = (await db).collection("group");
-  let records = (await db).collection("records");
-  if (req.body.notice.messageType === totalGrouprMsg.JOIN_GROUP) {
-    if (req.body.result === totalResult.CONFIRM) {
-      let ret1 = await users.updateOne(
-        { username: req.body.notice.from },
-        {
-          $push: {
-            group: {
-              sort: "未分组",
-              group_id: req.body.notice.to,
-              private: false,
-            },
-          },
-        }
-      );
-      let ret2 = await group.updateOne(
-        { room_id: req.body.notice.to },
-        { $push: { member: req.body.notice.from } }
-      );
-      let ret4 = await users.updateOne(
-        { username: req.body.notice.from },
-        {
-          $push: {
-            message: {
-              result: totalResult.CONFIRM_BACK,
-              messageType: req.body.notice.messageType,
-              from: req.body.notice.from,
-              to: req.body.notice.to,
-              owner: req.body.notice.owner,
-              room_name: req.body.notice.room_name,
-              private: false,
-              read: false,
-              date: new Date(),
-            },
-          },
-        }
-      );
-      console.log(ret1, ret2);
-    }
-    let ret3 = await users.updateOne(
-      { username: req.session.user.username },
-      {
-        $set: {
-          "message.$[elem].read": true,
-        },
-      },
-      {
-        arrayFilters: [
+  try {
+    let users = (await db).collection("users");
+    let group = (await db).collection("group");
+    let records = (await db).collection("records");
+    if (req.body.notice.messageType === totalGrouprMsg.JOIN_GROUP) {
+      if (req.body.result === totalResult.CONFIRM) {
+        await users.updateOne(
+          { username: req.body.notice.from },
           {
-            elem: req.body.notice,
+            $push: {
+              group: {
+                sort: "未分组",
+                group_id: req.body.notice.room_id,
+                private: false,
+              },
+              message: {
+                result: totalResult.CONFIRM_BACK,
+                messageType: req.body.notice.messageType,
+                from: req.body.notice.to,
+                to: req.body.notice.from,
+                room_id: req.body.notice.room_id,
+                private: false,
+                read: false,
+                date: new Date(),
+              },
+            },
+          }
+        );
+        await group.updateOne(
+          { room_id: req.body.notice.room_id },
+          { $push: { member: req.body.notice.from } }
+        );
+        await users.updateOne(
+          { username: req.body.notice.to },
+          {
+            $set: {
+              "message.$[elem].read": true,
+            },
           },
-        ],
-      }
-    );
+          {
+            arrayFilters: [
+              {
+                "elem.from": req.body.notice.from,
+                "elem.to": req.body.notice.to,
+                "elem.messageType": req.body.notice.messageType,
+              },
+            ],
+          }
+        );
+      } else if (req.body.result === totalResult.DENY) {
+        await users.updateOne(
+          { username: req.body.notice.to },
+          {
+            $set: {
+              "message.$[elem].read": true,
+            },
+          },
+          {
+            arrayFilters: [
+              {
+                "elem.from": req.body.notice.from,
+                "elem.to": req.body.notice.to,
+                "elem.messageType": req.body.notice.messageType,
+              },
+            ],
+          }
+        );
 
-    res.send("OK");
-  } else if (req.body.notice.messageType === totalUserMsg.ADD_FRIEND) {
-    if (req.body.result === totalResult.CONFIRM) {
-      let nowDate = new Date();
-      let group_id =
-        req.body.notice.from +
-        "_" +
-        req.body.notice.to +
-        "_" +
-        nowDate.getTime();
-      let ret1 = await users.updateOne(
-        { username: req.body.notice.from },
-        {
-          $push: {
-            group: { sort: "未分组", group_id: group_id, private: true },
-            friend: req.body.notice.to,
-          },
-        }
-      );
-      let ret2 = await users.updateOne(
-        { username: req.body.notice.to },
-        {
-          $push: {
-            group: { sort: "未分组", group_id: group_id, private: true },
-            friend: req.body.notice.from,
-          },
-        }
-      );
-      let ret3 = await group.insertOne({
-        foundtime: nowDate,
-        room_id: group_id,
-        user_a: req.body.notice.to,
-        user_b: req.body.notice.from,
-        private: true,
-      });
-      let ret4 = await users.updateOne(
-        { username: req.session.user.username },
-        {
-          $set: {
-            "message.$[elem].read": true,
-          },
-        },
-        {
-          arrayFilters: [
-            {
-              "elem.from": req.body.notice.from,
-              "elem.to": req.body.notice.to,
-              "elem.messageType": req.body.notice.messageType,
+        await users.updateOne(
+          { username: req.body.notice.from },
+          {
+            $push: {
+              message: {
+                result: totalResult.DENY_BACK,
+                messageType: req.body.notice.messageType,
+                from: req.body.notice.to,
+                to: req.body.notice.from,
+                room_id: req.body.notice.room_id,
+                private: false,
+                read: false,
+                date: new Date(),
+              },
             },
-          ],
-        }
-      );
-      let ret5 = await users.updateOne(
-        { username: req.body.notice.from },
-        {
-          $push: {
-            message: {
-              result: totalResult.CONFIRM_BACK,
-              messageType: req.body.notice.messageType,
-              from: req.body.notice.to,
-              to: req.body.notice.from,
-              read: false,
-              private: true,
-              date: new Date(),
+          }
+        );
+      } else if (
+        req.body.result === totalResult.CONFIRM_BACK ||
+        req.body.result === totalResult.DENY_BACK
+      ) {
+        await users.updateOne(
+          { username: req.session.user.username },
+          {
+            $set: {
+              "message.$[elem].read": true,
             },
           },
-        }
-      );
-      let ret6 = await records.insertOne({
-        room_id:
+          {
+            arrayFilters: [
+              {
+                "elem.from": req.body.notice.from,
+                "elem.to": req.body.notice.to,
+                "elem.result": req.body.result,
+                "elem.messageType": req.body.notice.messageType,
+              },
+            ],
+          }
+        );
+      }
+      res.send("OK");
+    } else if (req.body.notice.messageType === totalUserMsg.ADD_FRIEND) {
+      if (req.body.result === totalResult.CONFIRM) {
+        let nowDate = new Date();
+        let group_id =
           req.body.notice.from +
           "_" +
           req.body.notice.to +
           "_" +
-          nowDate.getTime(),
-        recording: [],
-      });
-      res.send("OK");
-    } else if (
-      req.body.result === totalResult.CONFIRM_BACK ||
-      req.body.result === totalResult.DENY_BACK
-    ) {
-      let ret3 = await users.updateOne(
-        { username: req.session.user.username },
-        {
-          $set: {
-            "message.$[elem].read": true,
-          },
-        },
-        {
-          arrayFilters: [
-            {
-              "elem.from": req.body.notice.from,
-              "elem.to": req.body.notice.to,
-              "elem.result": req.body.result,
-              "elem.messageType": req.body.notice.messageType,
-            },
-          ],
-        }
-      );
-      res.send("OK");
-    } else if (req.body.result === totalResult.DENY) {
-      await users.updateOne(
-        { username: req.session.user.username },
-        {
-          $set: {
-            "message.$[elem].read": true,
-          },
-        },
-        {
-          arrayFilters: [
-            {
-              "elem.from": req.body.notice.from,
-              "elem.to": req.body.notice.to,
-              "elem.messageType": req.body.notice.messageType,
-            },
-          ],
-        }
-      );
-      await users.updateOne(
-        { username: req.body.notice.from },
-        {
-          $push: {
-            message: {
-              result: totalResult.DENY_BACK,
-              messageType: req.body.notice.messageType,
-              from: req.body.notice.to,
-              to: req.body.notice.from,
-              private: true,
-              date: new Date(),
-            },
-          },
-        }
-      );
-      res.send("OK");
-    }
-  } else if (req.body.notice.messageType === totalUserMsg.DELETE_FRIEND) {
-    let ret3 = users.updateOne(
-      { username: req.session.user.username },
-      {
-        $set: {
-          "message.$[elem].read": true,
-        },
-      },
-      {
-        arrayFilters: [
+          nowDate.getTime();
+        let ret1 = await users.updateOne(
+          { username: req.body.notice.from },
           {
-            "elem.from": req.body.notice.from,
-            "elem.to": req.body.notice.to,
-            "elem.result": req.body.result,
-            "elem.messageType": req.body.notice.messageType,
+            $push: {
+              group: { sort: "未分组", group_id: group_id, private: true },
+              friend: req.body.notice.to,
+            },
+          }
+        );
+        let ret2 = await users.updateOne(
+          { username: req.body.notice.to },
+          {
+            $push: {
+              group: { sort: "未分组", group_id: group_id, private: true },
+              friend: req.body.notice.from,
+            },
+          }
+        );
+        let ret3 = await group.insertOne({
+          foundtime: nowDate,
+          room_id: group_id,
+          user_a: req.body.notice.to,
+          user_b: req.body.notice.from,
+          private: true,
+        });
+        let ret4 = await users.updateOne(
+          { username: req.session.user.username },
+          {
+            $set: {
+              "message.$[elem].read": true,
+            },
           },
-        ],
+          {
+            arrayFilters: [
+              {
+                "elem.from": req.body.notice.from,
+                "elem.to": req.body.notice.to,
+                "elem.messageType": req.body.notice.messageType,
+              },
+            ],
+          }
+        );
+        let ret5 = await users.updateOne(
+          { username: req.body.notice.from },
+          {
+            $push: {
+              message: {
+                result: totalResult.CONFIRM_BACK,
+                messageType: req.body.notice.messageType,
+                from: req.body.notice.to,
+                to: req.body.notice.from,
+                read: false,
+                private: true,
+                date: new Date(),
+              },
+            },
+          }
+        );
+        let ret6 = await records.insertOne({
+          room_id:
+            req.body.notice.from +
+            "_" +
+            req.body.notice.to +
+            "_" +
+            nowDate.getTime(),
+          recording: [],
+        });
+        res.send("OK");
+      } else if (
+        req.body.result === totalResult.CONFIRM_BACK ||
+        req.body.result === totalResult.DENY_BACK
+      ) {
+        await users.updateOne(
+          { username: req.session.user.username },
+          {
+            $set: {
+              "message.$[elem].read": true,
+            },
+          },
+          {
+            arrayFilters: [
+              {
+                "elem.from": req.body.notice.from,
+                "elem.to": req.body.notice.to,
+                "elem.result": req.body.result,
+                "elem.messageType": req.body.notice.messageType,
+              },
+            ],
+          }
+        );
+        res.send("OK");
+      } else if (req.body.result === totalResult.DENY) {
+        await users.updateOne(
+          { username: req.session.user.username },
+          {
+            $set: {
+              "message.$[elem].read": true,
+            },
+          },
+          {
+            arrayFilters: [
+              {
+                "elem.from": req.body.notice.from,
+                "elem.to": req.body.notice.to,
+                "elem.messageType": req.body.notice.messageType,
+              },
+            ],
+          }
+        );
+        await users.updateOne(
+          { username: req.body.notice.from },
+          {
+            $push: {
+              message: {
+                result: totalResult.DENY_BACK,
+                messageType: req.body.notice.messageType,
+                from: req.body.notice.to,
+                to: req.body.notice.from,
+                private: true,
+                date: new Date(),
+              },
+            },
+          }
+        );
+        res.send("OK");
       }
-    );
-    res.send("OK");
-  } else if (req.body.notice.messageType === totalGrouprMsg.INVITE_GROUP) {
-    if (req.body.result === totalResult.CONFIRM) {
-      const query = await group
-        .find({
-          private: false,
-          owner: req.body.notice.from,
-          room_name: req.body.notice.room_name,
-        })
-        .toArray();
-      if (query.length === 0) {
-        res.status(500).send("房间未找到");
-        return;
-      }
-      const room_id = query[0].room_id;
-      console.log(req.body, "fuck");
-      await users.updateOne(
-        { username: req.body.notice.to },
-        {
-          $set: {
-            "message.$[elem].read": true,
-          },
-          $push: {
-            group: {
-              sort: "未分组",
-              group_id: room_id,
-              private: false,
-            },
-          },
-        },
-        {
-          arrayFilters: [
-            {
-              "elem.from": req.body.notice.from,
-              "elem.to": req.body.notice.to,
-              "elem.messageType": req.body.notice.messageType,
-            },
-          ],
-        }
-      );
-      await group.updateOne(
-        {
-          room_id,
-        },
-        {
-          $push: {
-            member: req.body.notice.to,
-          },
-        }
-      );
-      await users.updateOne(
-        {
-          username: req.body.notice.from,
-        },
-        {
-          $push: {
-            message: {
-              result: totalResult.CONFIRM_BACK,
-              messageType: req.body.notice.messageType,
-              from: req.body.notice.to,
-              to: req.body.notice.from,
-              room_name: req.body.notice.room_name,
-              private: false,
-              read: false,
-              date: new Date(),
-            },
-          },
-        }
-      );
-      res.send("OK");
-    } else if (req.body.result === totalResult.DENY) {
-      await users.updateOne(
-        { username: req.body.notice.to },
-        { $set: { "message.$[elem].read": true } },
-        {
-          arrayFilters: [
-            {
-              "elem.from": req.body.notice.from,
-              "elem.to": req.body.notice.to,
-              "elem.messageType": req.body.notice.messageType,
-            },
-          ],
-        }
-      );
-      await users.updateOne(
-        {
-          username: req.body.notice.from,
-        },
-        {
-          $push: {
-            message: {
-              result: totalResult.DENY_BACK,
-              messageType: req.body.notice.messageType,
-              from: req.body.notice.to,
-              to: req.body.notice.from,
-              room_name: req.body.notice.room_name,
-              private: false,
-              read: false,
-              date: new Date(),
-            },
-          },
-        }
-      );
-      res.send("OK");
-    } else if (
-      req.body.result === totalResult.CONFIRM_BACK ||
-      req.body.result === totalResult.DENY_BACK
-    ) {
-      await users.updateOne(
+    } else if (req.body.notice.messageType === totalUserMsg.DELETE_FRIEND) {
+      let ret3 = users.updateOne(
         { username: req.session.user.username },
         {
           $set: {
@@ -441,7 +366,123 @@ exports.handleMessage = async (req, res, next) => {
         }
       );
       res.send("OK");
+    } else if (req.body.notice.messageType === totalGrouprMsg.INVITE_GROUP) {
+      if (req.body.result === totalResult.CONFIRM) {
+        await users.updateOne(
+          { username: req.body.notice.to },
+          {
+            $set: {
+              "message.$[elem].read": true,
+            },
+            $push: {
+              group: {
+                sort: "未分组",
+                group_id: req.body.notice.room_id,
+                private: false,
+              },
+            },
+          },
+          {
+            arrayFilters: [
+              {
+                "elem.from": req.body.notice.from,
+                "elem.to": req.body.notice.to,
+                "elem.messageType": req.body.notice.messageType,
+              },
+            ],
+          }
+        );
+        await group.updateOne(
+          {
+            room_id: req.body.notice.room_id,
+          },
+          {
+            $push: {
+              member: req.body.notice.to,
+            },
+          }
+        );
+        await users.updateOne(
+          {
+            username: req.body.notice.from,
+          },
+          {
+            $push: {
+              message: {
+                result: totalResult.CONFIRM_BACK,
+                messageType: req.body.notice.messageType,
+                from: req.body.notice.to,
+                to: req.body.notice.from,
+                room_id: req.body.notice.room_id,
+                private: false,
+                read: false,
+                date: new Date(),
+              },
+            },
+          }
+        );
+        res.send("OK");
+      } else if (req.body.result === totalResult.DENY) {
+        await users.updateOne(
+          { username: req.body.notice.to },
+          { $set: { "message.$[elem].read": true } },
+          {
+            arrayFilters: [
+              {
+                "elem.from": req.body.notice.from,
+                "elem.to": req.body.notice.to,
+                "elem.messageType": req.body.notice.messageType,
+              },
+            ],
+          }
+        );
+        await users.updateOne(
+          {
+            username: req.body.notice.from,
+          },
+          {
+            $push: {
+              message: {
+                result: totalResult.DENY_BACK,
+                messageType: req.body.notice.messageType,
+                from: req.body.notice.to,
+                to: req.body.notice.from,
+                room_id: req.body.notice.room_id,
+                private: false,
+                read: false,
+                date: new Date(),
+              },
+            },
+          }
+        );
+        res.send("OK");
+      } else if (
+        req.body.result === totalResult.CONFIRM_BACK ||
+        req.body.result === totalResult.DENY_BACK
+      ) {
+        await users.updateOne(
+          { username: req.session.user.username },
+          {
+            $set: {
+              "message.$[elem].read": true,
+            },
+          },
+          {
+            arrayFilters: [
+              {
+                "elem.from": req.body.notice.from,
+                "elem.to": req.body.notice.to,
+                "elem.result": req.body.result,
+                "elem.messageType": req.body.notice.messageType,
+              },
+            ],
+          }
+        );
+        res.send("OK");
+      }
     }
+  } catch (error) {
+    console.error(error);
   }
 };
 
@@ -637,7 +678,6 @@ exports.search = async (req, res, next) => {
       .toArray();
     console.log(find2, ret2);
     let ret = ret1.concat(ret2);
-    ret = unique(ret);
     if (ret.length === 0) {
       res.status(404).send("搜索无结果");
       return;
@@ -747,6 +787,7 @@ function handleProject(name) {
 exports.findGroupByUsername = async (req, res, next) => {
   try {
     const users = (await db).collection("users");
+    const records = (await db).collection("records");
     const { username } = req.session.user;
     const ret1 = await users
       .aggregate([
@@ -851,13 +892,53 @@ exports.findGroupByUsername = async (req, res, next) => {
         },
       ])
       .toArray();
-    const ret = ret1.concat(ret2);
-    res.send(
-      ret.map((v) => {
+    let ret = ret1.concat(ret2);
+    ret = await Promise.all(
+      ret.map(async (v) => {
+        let record = await records
+          .aggregate([
+            {
+              $match: {
+                room_id: v.group.group_id,
+              },
+            },
+            {
+              $project: {
+                recording: 1,
+              },
+            },
+            {
+              $unwind: "$recording",
+            },
+            {
+              $match: {
+                "recording.time": {
+                  $gte: new Date(req.session.user.last),
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "recording.username",
+                foreignField: "username",
+                as: "recording.userObj",
+              },
+            },
+          ])
+          .toArray();
+
+        record = record.map((v) => {
+          return {
+            ...v.recording,
+            userObj: v.recording.userObj[0],
+          };
+        });
         if (v.info.private) {
           return {
             ...v.group,
             ...v.info,
+            record,
             room_name:
               v.info.user_a.username === username
                 ? v.info.user_b
@@ -867,6 +948,7 @@ exports.findGroupByUsername = async (req, res, next) => {
         return {
           ...v.group,
           ...v.info,
+          record,
           member: v.info.member.map((v) => {
             delete v.group;
             delete v.message;
@@ -876,6 +958,7 @@ exports.findGroupByUsername = async (req, res, next) => {
         };
       })
     );
+    res.send(ret);
   } catch (error) {
     console.error(error);
     res.status(500).send("服务端出错");
@@ -1049,10 +1132,9 @@ exports.findMyUser = async (req, res, next) => {
             return v;
           } else {
             const room = await group.find({ room_id: v.room_id }).toArray();
-
             return {
               ...v,
-              room,
+              room: room[0],
             };
           }
         })
@@ -1061,6 +1143,10 @@ exports.findMyUser = async (req, res, next) => {
       console.log(msg, messageArr[0].message);
     }
     req.session.user = userInfo[0];
+    await user.updateOne(
+      { username: req.session.user.username },
+      { $set: { last: new Date() } }
+    );
     res.send(req.session.user);
   } catch (error) {
     console.error(error);
@@ -1142,7 +1228,7 @@ exports.registerHandle = async (req, res, next) => {
     let myUser = {
       username: req.body.username,
       permit: "user",
-      head_picture: "/public/img/logo.png",
+      head_picture: "/public/img/default-avatar.jpg",
       words: "无",
       group: [],
       message: [],
@@ -1153,7 +1239,7 @@ exports.registerHandle = async (req, res, next) => {
       area: ["中国"],
       birthday: "无",
       email: "无",
-      cover: "",
+      cover: "/public/img/default-cover.png",
     };
     let ret2 = await users.insertOne(myUser);
     console.log(ret2);
@@ -1166,8 +1252,8 @@ exports.registerHandle = async (req, res, next) => {
 };
 
 exports.logoutHandle = async (req, res, next) => {
-  req.session.user = null;
-  res.redirect("/login");
+  delete req.session.user;
+  setTimeout(() => res.redirect("/login"), 300);
 };
 
 exports.uploadIMG = async (req, res, next) => {

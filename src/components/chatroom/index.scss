@@ -91,10 +91,13 @@
           flex-direction: column;
           align-items: center;
           cursor: pointer;
+          overflow-y: auto;
+          .group-info-words{
+            margin-left: 20px;
+          }
           .group-member-list {
             width: 100%;
             flex: 1;
-            overflow-y: auto;
             .group-single-member {
               transition: .3s all ease-in-out;
               &:hover {

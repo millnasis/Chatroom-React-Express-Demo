@@ -23,7 +23,15 @@ export function* sendToGetGroup() {
         response.data.forEach((e) => {
           e.socket = e.private ? io("/single") : io("/group");
           e.socket.emit("room", e.room_id);
-          e.showMSG = [];
+          e.showMSG = e.record;
+          let count = 0;
+          e.record.forEach((el) => {
+            if (el.username !== action.userInfo.username) {
+              count++;
+            }
+          });
+          e.count = count;
+          delete e.record;
           const recordName =
             (e.private ? "private" : "public") + e.sort + e.room_id;
           const { chatroom } = store.getState();
@@ -35,7 +43,13 @@ export function* sendToGetGroup() {
             });
             e.socket.on("message", function (data) {
               store.dispatch(
-                socket_message(e.private, e.sort, e.room_id, data)
+                socket_message(
+                  e.private,
+                  e.sort,
+                  e.room_id,
+                  data,
+                  action.userInfo
+                )
               );
             });
             e.socket.on("delete", function (data) {
